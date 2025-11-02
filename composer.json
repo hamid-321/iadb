@@ -7,10 +7,17 @@
         "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "doctrine/dbal": "^3",
+        "doctrine/doctrine-bundle": "^2.18",
+        "doctrine/doctrine-migrations-bundle": "^3.5",
+        "doctrine/orm": "^3.5",
+        "symfony/asset": "7.3.*",
         "symfony/console": "7.3.*",
         "symfony/dotenv": "7.3.*",
         "symfony/flex": "^2",
+        "symfony/form": "7.3.*",
         "symfony/framework-bundle": "7.3.*",
+        "symfony/monolog-bundle": "^3.10",
         "symfony/runtime": "7.3.*",
         "symfony/twig-bundle": "7.3.*",
         "symfony/yaml": "7.3.*",
@@ -66,5 +73,11 @@
             "allow-contrib": false,
             "require": "7.3.*"
         }
+    },
+    "require-dev": {
+        "symfony/debug-bundle": "7.3.*",
+        "symfony/maker-bundle": "^1.64",
+        "symfony/stopwatch": "7.3.*",
+        "symfony/web-profiler-bundle": "7.3.*"
     }
 }
