@@ -3,15 +3,49 @@
 {% block title %}Register{% endblock %}
 
 {% block body %}
-    <h1>Register</h1>
+    <div class="min-h-[calc(100vh-4rem)] bg-gray-50 flex items-center justify-center px-4 py-4">
+        <div class="w-full max-w-sm">
+            <div class="bg-white shadow rounded-lg p-6 max-h-full overflow-auto">
+                <h1 class="text-2xl font-semibold text-gray-900 mb-6 text-center">Create your account</h1>
 
-    {{ form_errors(registrationForm) }}
+                {{ form_errors(registrationForm) }}
 
-    {{ form_start(registrationForm) }}
-        {{ form_row(registrationForm.email) }}
-        {{ form_row(registrationForm.plainPassword.first) }}
-        {{ form_row(registrationForm.plainPassword.second) }}
+                {{ form_start(registrationForm, { attr: { class: 'space-y-5' } }) }}
+                    <div>
+                        <label for="{{ registrationForm.email.vars.id }}" class="block mb-2 text-sm font-medium text-gray-900">Email</label>
+                        {{ form_widget(registrationForm.email, {
+                            attr: {
+                                class: 'block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                            }
+                        }) }}
+                        {{ form_errors(registrationForm.email) }}
+                    </div>
 
-        <button type="submit" class="btn">Register</button>
-    {{ form_end(registrationForm) }}
+                    <div>
+                        <label for="{{ registrationForm.plainPassword.first.vars.id }}" class="block mb-2 text-sm font-medium text-gray-900">Password</label>
+                        {{ form_widget(registrationForm.plainPassword.first, {
+                            attr: {
+                                class: 'block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                            }
+                        }) }}
+                        {{ form_errors(registrationForm.plainPassword.first) }}
+                    </div>
+
+                    <div>
+                        <label for="{{ registrationForm.plainPassword.second.vars.id }}" class="block mb-2 text-sm font-medium text-gray-900">Repeat Password</label>
+                        {{ form_widget(registrationForm.plainPassword.second, {
+                            attr: {
+                                class: 'block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                            }
+                        }) }}
+                        {{ form_errors(registrationForm.plainPassword.second) }}
+                    </div>
+
+                    <button type="submit" class="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        Register
+                    </button>
+                {{ form_end(registrationForm) }}
+            </div>
+        </div>
+    </div>
 {% endblock %}
