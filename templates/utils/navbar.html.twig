@@ -1,7 +1,6 @@
 <nav class="bg-white shadow-md sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-            <!-- Logo / App Name -->
             <div class="flex-shrink-0 flex items-center">
                 <a href="{{ path('app_home') }}" class="font-bold text-2xl text-indigo-600">
                     IADb
@@ -11,7 +10,7 @@
             <!-- Desktop Menu Links -->
             <div class="hidden md:flex md:items-center md:space-x-3">
                 {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-                    <!-- Links for LOGGED IN users -->
+                    {# User is logged in, show this #}
                     <span class="text-gray-700 text-sm">
                         Welcome, {{ app.user.email }}
                     </span>
@@ -19,7 +18,7 @@
                         Logout
                     </a>
                 {% else %}
-                    <!-- Links for GUESTS (logged out) -->
+                    {# User is not logged in, show this #}
                     <a href="{{ path('app_register') }}" class="py-2 px-3 bg-indigo-500 text-white rounded-md text-sm font-medium hover:bg-indigo-600">
                         Sign Up
                     </a>
@@ -29,7 +28,7 @@
                 {% endif %}
             </div>
 
-            <!-- Mobile Menu Button (Hamburger) -->
+            {# Mobile Menu Button #}
             <div class="md:hidden flex items-center">
                 <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" aria-controls="mobile-menu" aria-expanded="false">
                     <span class="sr-only">Open main menu</span>
