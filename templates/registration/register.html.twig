@@ -18,7 +18,14 @@
                                 class: 'block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500'
                             }
                         }) }}
-                        {{ form_errors(registrationForm.email) }}
+                        {# if there are errors, show them #}
+                        {% if registrationForm.email.vars.errors|length > 0 %}
+                            <div class="mt-4 mb-4 rounded border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm" role="alert">
+                                {% for error in registrationForm.email.vars.errors %}
+                                    <span>{{ error.message }}</span><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div>
@@ -28,7 +35,14 @@
                                 class: 'block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500'
                             }
                         }) }}
-                        {{ form_errors(registrationForm.plainPassword.first) }}
+                        {# if there are errors, show them #}
+                        {% if registrationForm.plainPassword.first.vars.errors|length > 0 %}
+                            <div class="mt-4 mb-4 rounded border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm" role="alert">
+                                {% for error in registrationForm.plainPassword.first.vars.errors %}
+                                    <span>{{ error.message }}</span><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div>
@@ -38,7 +52,14 @@
                                 class: 'block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500'
                             }
                         }) }}
-                        {{ form_errors(registrationForm.plainPassword.second) }}
+                        {# if there are errors, show them #}
+                        {% if registrationForm.plainPassword.second.vars.errors|length > 0 %}
+                            <div class="mt-4 mb-4 rounded border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm" role="alert">
+                                {% for error in registrationForm.plainPassword.second.vars.errors %}
+                                    <span>{{ error.message }}</span><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
 
                     <button type="submit" class="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
