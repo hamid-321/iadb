@@ -15,17 +15,6 @@
         {# this is the navbar #}
         {% include 'utils/navbar.html.twig' %}
 
-        {# this is for success and error messages #}
-        {% for label, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-                    <div class="bg-{% if label == 'success' %}green{% elseif label == 'error' %}red{% else %}blue{% endif %}-100 border-l-4 border-{% if label == 'success' %}green{% elseif label == 'error' %}red{% else %}blue{% endif %}-500 text-{% if label == 'success' %}green{% elseif label == 'error' %}red{% else %}blue{% endif %}-700 p-4 rounded-md" role="alert">
-                        <p>{{ message|raw }}</p>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endfor %}
-
         {% block body %}{% endblock %}
 
         {{ encore_entry_script_tags('app') }}

@@ -16,6 +16,20 @@ class AlbumRepository extends ServiceEntityRepository
         parent::__construct($registry, Album::class);
     }
 
+    public function findOneWithReviews(int $id): ?Album
+    {
+        return $this->createQueryBuilder('a')
+            ->leftJoin('a.reviews', 'r')
+            ->addSelect('r')
+            ->leftJoin('r.reviewer', 'u')
+            ->addSelect('u')
+            ->where('a.id = :id')
+            ->setParameter('id', $id)
+            ->orderBy('r.timestamp', 'DESC')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     //    /**
     //     * @return Album[] Returns an array of Album objects
     //     */

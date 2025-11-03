@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Album{% endblock %}
+
+{% block body %}
+    <h1>Album</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ album.id }}</td>
+            </tr>
+            <tr>
+                <th>Title</th>
+                <td>{{ album.title }}</td>
+            </tr>
+            <tr>
+                <th>Artist</th>
+                <td>{{ album.artist }}</td>
+            </tr>
+            <tr>
+                <th>Genre</th>
+                <td>{{ album.genre }}</td>
+            </tr>
+            <tr>
+                <th>TrackList</th>
+                <td>{{ album.trackList }}</td>
+            </tr>
+            <tr>
+                <th>Cover</th>
+                <td>{{ album.cover }}</td>
+            </tr>
+            <tr>
+                <th>AverageRating</th>
+                <td>{{ album.averageRating }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_album_index') }}">back to list</a>
+
+    <a href="{{ path('app_album_edit', {'id': album.id}) }}">edit</a>
+
+    {{ include('album/_delete_form.html.twig') }}
+
+    {# Reviews Section #}
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold text-black mb-4">Reviews</h2>
+        
+        {% if album.reviews|length > 0 %}
+            <div class="space-y-4">
+                {% for review in album.reviews %}
+                    <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-black">{{ review.reviewer.email }}</span>
+                                <span class="flex items-center gap-1">
+                                    {% for i in 1..5 %}
+                                        {% if i <= review.rating %}
+                                            <span class="text-yellow-400">★</span>
+                                        {% else %}
+                                            <span class="text-gray-300">★</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                            </div>
+                            {% if review.timestamp %}
+                                <span class="text-sm text-gray-600">{{ review.timestamp|date('F j, Y') }}</span>
+                            {% endif %}
+                        </div>
+                        {% if review.reviewText %}
+                            <p class="text-black mt-2">{{ review.reviewText }}</p>
+                        {% else %}
+                            <p class="text-gray-500 italic mt-2">No review text provided.</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-600">No reviews yet. Be the first to review this album!</p>
+        {% endif %}
+    </div>
+{% endblock %}
