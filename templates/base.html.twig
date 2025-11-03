@@ -2,17 +2,33 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-            {{ encore_entry_link_tags('app') }}
-        {% endblock %}
+        {# this is for the css to be loaded #}
+        {{ encore_entry_link_tags('app') }}
+        {% block stylesheets %}{% endblock %}
 
-        {% block javascripts %}
-            {{ encore_entry_script_tags('app') }}
-        {% endblock %}
+        <title>{% block title %}Welcome!{% endblock %}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
     </head>
     <body>
+        {# this is the navbar #}
+        {% include 'utils/navbar.html.twig' %}
+
+        {# this is for success and error messages #}
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                    <div class="bg-{% if label == 'success' %}green{% elseif label == 'error' %}red{% else %}blue{% endif %}-100 border-l-4 border-{% if label == 'success' %}green{% elseif label == 'error' %}red{% else %}blue{% endif %}-500 text-{% if label == 'success' %}green{% elseif label == 'error' %}red{% else %}blue{% endif %}-700 p-4 rounded-md" role="alert">
+                        <p>{{ message|raw }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
         {% block body %}{% endblock %}
+
+        {{ encore_entry_script_tags('app') }}
+        {% block javascripts %}{% endblock %}
     </body>
 </html>
