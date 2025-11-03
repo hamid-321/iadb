@@ -7,5 +7,5 @@
 
     {{ include('review/_form.html.twig') }}
 
-    <a href="{{ path('app_review_index') }}">back to list</a>
+    <a href="{{ path('app_album_show', {'id': album.id}) }}">back to album</a>
 {% endblock %}

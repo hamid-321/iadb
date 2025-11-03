@@ -38,7 +38,7 @@
         </tbody>
     </table>
 
-    <a href="{{ path('app_album_index') }}">back to list</a>
+    <a href="{{ path('app_album_index') }}">Back to list</a>
 
     <a href="{{ path('app_album_edit', {'id': album.id}) }}">edit</a>
 
@@ -74,6 +74,10 @@
                         {% else %}
                             <p class="text-gray-500 italic mt-2">No review text provided.</p>
                         {% endif %}
+                        <div class="mt-4 flex gap-2">
+                            <a href="{{ path('app_review_edit', {'id': review.id}) }}" class="btn btn-primary">Edit</a>
+                            {{ include('review/_delete_form.html.twig') }}
+                        </div>
                     </div>
                 {% endfor %}
             </div>

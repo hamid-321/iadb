@@ -29,14 +29,14 @@ class ReviewType extends AbstractType
                 'expanded' => true, //use buttons
                 'multiple' => false,
                 'attr' => [
-                    'class' => 'w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
+                    'class' => 'w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-100 dark:text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
                 ],
             ])
             ->add('reviewText', TextareaType::class, [
                 'label' => 'Your Review',
                 'attr' => [
                     'rows' => 8,
-                    'class' => 'w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
+                    'class' => 'w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-100 dark:text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
                     'placeholder' => 'What did you think of this album?'
                 ],
             ]);

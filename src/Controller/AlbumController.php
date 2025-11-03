@@ -80,6 +80,8 @@ final class AlbumController extends AbstractController
         if ($this->isCsrfTokenValid('delete'.$album->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($album);
             $entityManager->flush();
+
+            $this->addFlash('success', 'The album has been deleted.');
         }
 
         return $this->redirectToRoute('app_album_index', [], Response::HTTP_SEE_OTHER);
