@@ -3,9 +3,23 @@
 {% block title %}New Review{% endblock %}
 
 {% block body %}
-    <h1>Create new Review</h1>
+<div class="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    {# Header Section #}
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold tracking-tight text-indigo-600 mb-2">Write a Review</h1>
+        <p class="text-xl text-gray-600">
+            Reviewing: <span class="font-semibold text-black">{{ album.title }}</span> by <span class="font-semibold text-black">{{ album.artist }}</span>
+        </p>
+    </div>
 
-    {{ include('review/_form.html.twig') }}
+    {# Form Card #}
+    <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 mb-4">
+        {{ include('review/_form.html.twig') }}
+    </div>
 
-    <a href="{{ path('app_album_show', {'id': album.id}) }}">back to album</a>
+    {# Back Button #}
+    <a href="{{ path('app_album_show', {'id': album.id}) }}" class="inline-block px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+        Back to Album
+    </a>
+</div>
 {% endblock %}

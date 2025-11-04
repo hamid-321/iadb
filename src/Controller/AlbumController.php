@@ -33,7 +33,7 @@ final class AlbumController extends AbstractController
             $entityManager->persist($album);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_album_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_album_show', ['id' => $album->getId()], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('album/new.html.twig', [
@@ -65,7 +65,7 @@ final class AlbumController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_album_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_album_show', ['id' => $album->getId()], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('album/edit.html.twig', [

@@ -1,88 +1,132 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Album{% endblock %}
+{% block title %}{{ album.title }}{% endblock %}
 
 {% block body %}
-    <h1>Album</h1>
+<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    {# Header Section #}
+    <div class="mb-8">
+        
+        <h1 class="text-4xl font-bold tracking-tight text-indigo-600 mb-2">{{ album.title }}</h1>
+        <p class="text-xl text-gray-600">by {{ album.artist }}</p>
+    </div>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ album.id }}</td>
-            </tr>
-            <tr>
-                <th>Title</th>
-                <td>{{ album.title }}</td>
-            </tr>
-            <tr>
-                <th>Artist</th>
-                <td>{{ album.artist }}</td>
-            </tr>
-            <tr>
-                <th>Genre</th>
-                <td>{{ album.genre }}</td>
-            </tr>
-            <tr>
-                <th>TrackList</th>
-                <td>{{ album.trackList }}</td>
-            </tr>
-            <tr>
-                <th>Cover</th>
-                <td>{{ album.cover }}</td>
-            </tr>
-            <tr>
-                <th>AverageRating</th>
-                <td>{{ album.averageRating }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <a href="{{ path('app_album_index') }}">Back to list</a>
-
-    <a href="{{ path('app_album_edit', {'id': album.id}) }}">edit</a>
-
-    {{ include('album/_delete_form.html.twig') }}
+    {# Album Details Card #}
+    <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 mb-8">
+        <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+                <div class="mb-2">
+                    <span class="font-semibold text-black">{{ album.title }}</span>
+                </div>
+                <span class="text-sm text-gray-500 mb-2 block">by {{ album.artist }}</span>
+                {% if album.averageRating %}
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-500">Average Rating:</span>
+                        <span class="flex items-center gap-1">
+                            {% for i in 1..5 %}
+                                {% if i <= album.averageRating %}
+                                    <span class="text-yellow-400 text-lg">★</span>
+                                {% else %}
+                                    <span class="text-gray-300 text-lg">★</span>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                        <span class="text-sm font-semibold text-gray-700">({{ album.averageRating|number_format(1) }})</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="mt-3">
+            {% if album.cover %}
+                <div class="mb-4 max-w-xs">
+                    <img src="{{ album.cover }}" alt="{{ album.title }}" class="w-full rounded-lg object-cover">
+                </div>
+            {% endif %}
+            <p class="text-gray-900 leading-relaxed mb-2">
+                <span class="font-medium text-gray-700">Genre:</span> {{ album.genre }}
+            </p>
+            {% if album.trackList %}
+                <p class="text-gray-900 leading-relaxed">
+                    <span class="font-medium text-gray-700">Track List:</span><br>{{ album.trackList }}
+                </p>
+            {% endif %}
+        </div>
+        <div class="mt-4 pt-4 border-t border-gray-200 flex gap-2">
+            <a href="{{ path('app_album_edit', {'id': album.id}) }}" class="px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                Edit Album
+            </a>
+            {{ include('album/_delete_form.html.twig') }}
+        </div>
+    </div>
+    <a href="{{ path('app_album_index') }}" class="inline-block px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors mb-4">
+        Back to Albums
+    </a>
 
     {# Reviews Section #}
-    <div class="mt-8">
-        <h2 class="text-2xl font-bold text-black mb-4">Reviews</h2>
+    <div>
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-3xl font-bold tracking-tight text-indigo-600">Reviews</h2>
+            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                <a href="{{ path('app_review_new', {'id': album.id}) }}" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    Add Review
+                </a>
+            {% endif %}
+        </div>
         
         {% if album.reviews|length > 0 %}
             <div class="space-y-4">
                 {% for review in album.reviews %}
                     <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="font-semibold text-black">{{ review.reviewer.email }}</span>
-                                <span class="flex items-center gap-1">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="mb-2">
+                                    <span class="font-semibold text-black">{{ review.reviewer.email }}</span>
+                                </div>
+                                {% if review.timestamp %}
+                                    <span class="text-sm text-gray-500 mb-2 block">{{ review.timestamp|date('F j, Y') }}</span>
+                                {% endif %}
+                                <div class="flex items-center gap-1">
                                     {% for i in 1..5 %}
                                         {% if i <= review.rating %}
-                                            <span class="text-yellow-400">★</span>
+                                            <span class="text-yellow-400 text-lg">★</span>
                                         {% else %}
-                                            <span class="text-gray-300">★</span>
+                                            <span class="text-gray-300 text-lg">★</span>
                                         {% endif %}
                                     {% endfor %}
-                                </span>
+                                </div>
                             </div>
-                            {% if review.timestamp %}
-                                <span class="text-sm text-gray-600">{{ review.timestamp|date('F j, Y') }}</span>
+                        </div>
+                        <div class="mt-3">
+                            {% if review.reviewText %}
+                                <p class="text-gray-900 leading-relaxed">{{ review.reviewText }}</p>
+                            {% else %}
+                                <p class="text-gray-500 italic">No review text provided.</p>
                             {% endif %}
                         </div>
-                        {% if review.reviewText %}
-                            <p class="text-black mt-2">{{ review.reviewText }}</p>
-                        {% else %}
-                            <p class="text-gray-500 italic mt-2">No review text provided.</p>
+                        {% if is_granted('IS_AUTHENTICATED_FULLY') and (review.reviewer == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR')) %}
+                            <div class="mt-4 pt-4 border-t border-gray-200 flex gap-2">
+                                <a href="{{ path('app_review_edit', {'id': review.id}) }}" class="px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                                    Edit Review
+                                </a>
+                                {{ include('review/_delete_form.html.twig') }}
+                            </div>
                         {% endif %}
-                        <div class="mt-4 flex gap-2">
-                            <a href="{{ path('app_review_edit', {'id': review.id}) }}" class="btn btn-primary">Edit</a>
-                            {{ include('review/_delete_form.html.twig') }}
-                        </div>
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-gray-600">No reviews yet. Be the first to review this album!</p>
+            <div class="bg-white rounded-lg shadow-md border border-gray-200 p-12 text-center">
+                <p class="text-xl text-gray-600 mb-4">No reviews yet.</p>
+                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                    <p class="text-gray-500 mb-4">Be the first to review this album!</p>
+                    <a href="{{ path('app_review_new', {'id': album.id}) }}" class="inline-block px-6 py-3 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        Write the First Review
+                    </a>
+                {% else %}
+                    <p class="text-gray-500">Sign in to write the first review!</p>
+                {% endif %}
+            </div>
         {% endif %}
     </div>
+</div>
 {% endblock %}
