@@ -69,10 +69,16 @@
                             <a href="{{ path('app_album_show', {'id': album.id}) }}" class="text-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                                 View
                             </a>
-                            <a href="{{ path('app_album_edit', {'id': album.id}) }}" class="text-center px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-                                Edit
-                            </a>
-                            {{ include('album/_delete_form.html.twig') }}
+                            <div class="flex gap-2">
+                                {% if is_granted('IS_AUTHENTICATED_FULLY') and (album.addedBy == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR')) %}
+                                    <a href="{{ path('app_album_edit', {'id': album.id}) }}" class="text-center px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                                        Edit
+                                    </a>
+                                {% endif %}
+                                {% if is_granted('ROLE_ADMIN') %}
+                                    {{ include('album/_delete_form.html.twig') }}
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>

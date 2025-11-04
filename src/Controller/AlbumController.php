@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/album')]
 final class AlbumController extends AbstractController
@@ -23,6 +24,7 @@ final class AlbumController extends AbstractController
     }
 
     #[Route('/new', name: 'app_album_new', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_USER')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $album = new Album();
@@ -57,8 +59,13 @@ final class AlbumController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_album_edit', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_USER')]
     public function edit(Request $request, Album $album, EntityManagerInterface $entityManager): Response
     {
+        // if ($album->getAddedBy() !== $this->getUser() && !$this->isGranted('ROLE_MODERATOR') && !$this->isGranted('ROLE_ADMIN')) {
+        //     $this->addFlash('error', 'You are not authorized to edit this album.');
+        //      return $this->redirectToRoute('app_album_show', ['id' => $album->getId()]);
+        // }
         $form = $this->createForm(AlbumType::class, $album);
         $form->handleRequest($request);
 
@@ -75,6 +82,7 @@ final class AlbumController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_album_delete', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(Request $request, Album $album, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$album->getId(), $request->getPayload()->getString('_token'))) {
