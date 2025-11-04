@@ -27,7 +27,10 @@ final class AlbumController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
+        $user = $this->getUser();
         $album = new Album();
+        $album->setAddedBy($user);
+
         $form = $this->createForm(AlbumType::class, $album);
         $form->handleRequest($request);
 

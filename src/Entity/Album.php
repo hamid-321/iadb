@@ -167,4 +167,30 @@ class Album
         return $this;
     }
 
+    public function calculateAverageRating(): void
+    {
+        $reviews = $this->getReviews();
+        
+        if ($reviews->isEmpty()) {
+            $this->averageRating = null;
+            return;
+        }
+
+        $totalRating = 0;
+        $reviewCount = 0;
+
+        foreach ($reviews as $review) {
+            if ($review->getRating() !== null) {
+                $totalRating += $review->getRating();
+                $reviewCount++;
+            }
+        }
+
+        if ($reviewCount > 0) {
+            $this->averageRating = round($totalRating / $reviewCount, 1);
+        } else {
+            $this->averageRating = null;
+        }
+    }
+
 }

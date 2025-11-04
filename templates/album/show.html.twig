@@ -19,10 +19,10 @@
                     <span class="font-semibold text-black">{{ album.title }}</span>
                 </div>
                 <span class="text-sm text-gray-500 mb-2 block">by {{ album.artist }}</span>
-                {% if album.averageRating %}
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-gray-500">Average Rating:</span>
-                        <span class="flex items-center gap-1">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-sm text-gray-600">Rating:</span>
+                    <div class="flex items-center">
+                        {% if album.averageRating %}
                             {% for i in 1..5 %}
                                 {% if i <= album.averageRating %}
                                     <span class="text-yellow-400 text-lg">★</span>
@@ -30,10 +30,12 @@
                                     <span class="text-gray-300 text-lg">★</span>
                                 {% endif %}
                             {% endfor %}
-                        </span>
-                        <span class="text-sm font-semibold text-gray-700">({{ album.averageRating|number_format(1) }})</span>
+                            <span class="ml-2 text-sm text-gray-600">({{ album.averageRating|number_format(1) }})</span>
+                        {% else %}
+                            <span class="text-gray-400 text-sm">No ratings yet</span>
+                        {% endif %}
                     </div>
-                {% endif %}
+                </div>
             </div>
         </div>
         <div class="mt-3">

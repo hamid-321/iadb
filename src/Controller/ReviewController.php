@@ -29,9 +29,12 @@ final class ReviewController extends AbstractController
         $form = $this->createForm(ReviewType::class, $review);
         $form->handleRequest($request);
 
-        // if form is successfully submitted
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($review);
+
+            $album->calculateAverageRating();
+            $entityManager->persist($album);
+
             $entityManager->flush();
 
             $this->addFlash('success', 'Your review has been submitted!');
@@ -40,7 +43,7 @@ final class ReviewController extends AbstractController
         
         return $this->render('review/new.html.twig', [
             'review' => $review,
-            'album' => $album, // pass the album back
+            'album' => $album,
             'form' => $form,
         ]);
     }
@@ -60,6 +63,11 @@ final class ReviewController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $review->setTimestamp(new \DateTime());
             $entityManager->persist($review);
+
+            $album = $review->getAlbum();
+            $album->calculateAverageRating();
+            $entityManager->persist($album);
+
             $entityManager->flush();
 
             $this->addFlash('success', 'The review has been updated.');
@@ -68,7 +76,7 @@ final class ReviewController extends AbstractController
 
         return $this->render('review/edit.html.twig', [
             'review' => $review,
-            'album' => $review->getAlbum(), // pass the album back
+            'album' => $review->getAlbum(),
             'form' => $form,
         ]);
     }
@@ -82,8 +90,23 @@ final class ReviewController extends AbstractController
         }
 
         if ($this->isCsrfTokenValid('delete'.$review->getId(), $request->getPayload()->getString('_token'))) {
+            $album = $review->getAlbum();
+            $albumId = $album->getId();
+            
             $entityManager->remove($review);
-            $entityManager->flush();
+            
+            $albumRepository = $entityManager->getRepository(Album::class);
+            $album = $albumRepository->find($albumId);
+            
+            if ($album) {
+                $album->calculateAverageRating();
+                $entityManager->persist($album);
+
+            }
+            
+            $entityManager->flush(); 
+            
+            return $this->redirectToRoute('app_album_show', ['id' => $albumId], Response::HTTP_SEE_OTHER);
         }
 
         return $this->redirectToRoute('app_album_show', ['id' => $review->getAlbum()->getId()], Response::HTTP_SEE_OTHER);
