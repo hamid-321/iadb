@@ -53,12 +53,12 @@
                 </p>
             {% endif %}
         </div>
-        {% if is_granted('IS_AUTHENTICATED_FULLY') and (album.addedBy == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR')) %}
+        {% if is_granted('edit_album', album) %}
             <div class="mt-4 pt-4 border-t border-gray-200 flex gap-2">
                 <a href="{{ path('app_album_edit', {'id': album.id}) }}" class="px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
                     Edit Album
                 </a>
-                {% if is_granted('ROLE_ADMIN') %}
+                {% if is_granted('delete_album', album) %}
                     {{ include('album/_delete_form.html.twig') }}
                 {% endif %}
             </div>
@@ -72,7 +72,7 @@
     <div>
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-3xl font-bold tracking-tight text-indigo-600">Reviews</h2>
-            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+            {% if is_granted('create_review', album) %}
                 <a href="{{ path('app_review_new', {'id': album.id}) }}" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                     Add Review
                 </a>
@@ -109,12 +109,14 @@
                                 <p class="text-gray-500 italic">No review text provided.</p>
                             {% endif %}
                         </div>
-                        {% if is_granted('IS_AUTHENTICATED_FULLY') and (review.reviewer == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR')) %}
+                        {% if is_granted('edit_review', review) %}
                             <div class="mt-4 pt-4 border-t border-gray-200 flex gap-2">
                                 <a href="{{ path('app_review_edit', {'id': review.id}) }}" class="px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
                                     Edit Review
                                 </a>
-                                {{ include('review/_delete_form.html.twig') }}
+                                {% if is_granted('delete_review', review) %}
+                                    {{ include('review/_delete_form.html.twig') }}
+                                {% endif %}
                             </div>
                         {% endif %}
                     </div>
@@ -123,7 +125,7 @@
         {% else %}
             <div class="bg-white rounded-lg shadow-md border border-gray-200 p-12 text-center">
                 <p class="text-xl text-gray-600 mb-4">No reviews yet.</p>
-                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                {% if is_granted('create_review', album) %}
                     <p class="text-gray-500 mb-4">Be the first to review this album!</p>
                     <a href="{{ path('app_review_new', {'id': album.id}) }}" class="inline-block px-6 py-3 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                         Write the First Review

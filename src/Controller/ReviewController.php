@@ -6,6 +6,7 @@ use App\Entity\Album;
 use App\Entity\Review;
 use App\Form\ReviewType;
 use App\Repository\ReviewRepository;
+use App\Repository\AlbumRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,7 +17,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class ReviewController extends AbstractController
 {
     #[Route('/album/{id}/new', name: 'app_review_new', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('create_review', subject: 'album')]
     public function new(Request $request, EntityManagerInterface $entityManager, Album $album): Response
     {
         $user = $this->getUser();
@@ -49,14 +50,9 @@ final class ReviewController extends AbstractController
     }
 
     #[Route('/review/{id}/edit', name: 'app_review_edit', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('edit_review', subject: 'review')]
     public function edit(Request $request, Review $review, EntityManagerInterface $entityManager): Response
     {
-        if ($review->getReviewer() !== $this->getUser() && !$this->isGranted('ROLE_MODERATOR') && !$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('error', 'You are not authorized to edit this review.');
-             return $this->redirectToRoute('app_album_show', ['id' => $review->getAlbum()->getId()], Response::HTTP_SEE_OTHER);
-        }
-
         $form = $this->createForm(ReviewType::class, $review);
         $form->handleRequest($request);
 
@@ -81,21 +77,15 @@ final class ReviewController extends AbstractController
         ]);
     }
     #[Route('/review/{id}/delete', name: 'app_review_delete', methods: ['POST'])]
-    #[IsGranted('ROLE_USER')]
-    public function delete(Request $request, Review $review, EntityManagerInterface $entityManager): Response
+    #[IsGranted('delete_review', subject: 'review')]
+    public function delete(Request $request, Review $review, EntityManagerInterface $entityManager, AlbumRepository $albumRepository): Response
     {
-        if ($review->getReviewer() !== $this->getUser() && !$this->isGranted('ROLE_MODERATOR') && !$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('error', 'You are not authorized to delete this review.');
-             return $this->redirectToRoute('app_album_show', ['id' => $review->getAlbum()->getId()]);
-        }
-
         if ($this->isCsrfTokenValid('delete'.$review->getId(), $request->getPayload()->getString('_token'))) {
             $album = $review->getAlbum();
             $albumId = $album->getId();
             
             $entityManager->remove($review);
             
-            $albumRepository = $entityManager->getRepository(Album::class);
             $album = $albumRepository->find($albumId);
             
             if ($album) {
