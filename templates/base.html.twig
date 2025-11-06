@@ -18,7 +18,13 @@
         {% for label, messages in app.flashes %}
             {% for message in messages %}
                 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-                    <div class="bg-{% if label == 'success' %}green{% elseif label == 'error' %}red{% else %}blue{% endif %}-100 border-l-4 border-{% if label == 'success' %}green{% elseif label == 'error' %}red{% else %}blue{% endif %}-500 text-{% if label == 'success' %}green{% elseif label == 'error' %}red{% else %}blue{% endif %}-700 p-4 rounded-md" role="alert">
+                {% if label == 'success' %}
+                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md" role="alert">
+                {% elseif label == 'error' %}
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
+                {% else %}
+                    <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-md" role="alert">
+                {% endif %}
                         <p>{{ message|raw }}</p>
                     </div>
                 </div>

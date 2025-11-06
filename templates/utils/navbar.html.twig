@@ -14,6 +14,9 @@
                     <span class="text-gray-700 text-sm">
                         Welcome, {{ app.user.email }}
                     </span>
+                    <a href="{{ path('app_user_profile', {'id': app.user.id}) }}" class="py-2 px-3 bg-indigo-500 text-white rounded-md text-sm font-medium hover:bg-indigo-600">
+                        Profile
+                    </a>
                     <a href="{{ path('app_album_index') }}" class="py-2 px-3 bg-indigo-500 text-white rounded-md text-sm font-medium hover:bg-indigo-600">
                         Albums
                     </a>
@@ -60,6 +63,9 @@
                 <div class="px-3 py-2">
                     <span class="text-gray-700 text-sm">Welcome, {{ app.user.email }}</span>
                 </div>
+                <a href="{{ path('app_user_profile', {'id': app.user.id}) }}" class="block px-3 py-2 rounded-md text-base font-medium text-white bg-indigo-500 hover:bg-indigo-600">
+                    Profile
+                </a>
                 <a href="{{ path('app_album_index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white bg-indigo-500 hover:bg-indigo-600">
                     Albums
                 </a>

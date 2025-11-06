@@ -37,6 +37,7 @@ final class AlbumController extends AbstractController
             $entityManager->persist($album);
             $entityManager->flush();
 
+            $this->addFlash('success', 'The album has been created.');
             return $this->redirectToRoute('app_album_show', ['id' => $album->getId()], Response::HTTP_SEE_OTHER);
         }
 
@@ -66,6 +67,7 @@ final class AlbumController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
+            $this->addFlash('success', 'The album has been updated.');
             return $this->redirectToRoute('app_album_show', ['id' => $album->getId()], Response::HTTP_SEE_OTHER);
         }
 

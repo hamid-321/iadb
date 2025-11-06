@@ -95,7 +95,7 @@ final class ReviewController extends AbstractController
             }
             
             $entityManager->flush(); 
-            
+            $this->addFlash('success', 'The review has been deleted.');
             return $this->redirectToRoute('app_album_show', ['id' => $albumId], Response::HTTP_SEE_OTHER);
         }
 
