@@ -4,11 +4,13 @@ namespace App\Service;
 
 use App\Entity\Album;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class AverageRatingService
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager
+        private readonly EntityManagerInterface $entityManager,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -18,7 +20,9 @@ class AverageRatingService
 
         if ($reviews->isEmpty()) {
             $album->setAverageRating(null);
-            $this->entityManager->flush();
+            $this->logger->info('No reviews found for album {albumId}, set average rating to null', [
+                'albumId' => $album->getId(),
+            ]);
             return;
         }
 
@@ -42,5 +46,11 @@ class AverageRatingService
 
         $this->entityManager->persist($album);
         //no need to flush, controller already will flush after this has been called
+
+        $this->logger->info('Average rating calculated for album {albumId}, set average rating to {averageRating}', [
+            'albumId' => $album->getId(),
+            'averageRating' => $album->getAverageRating() ?? 'null',
+        ]);
+        return;
     }
 }
