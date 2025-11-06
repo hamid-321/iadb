@@ -13,12 +13,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Service\AverageRatingService;
 
 final class ReviewController extends AbstractController
 {
     #[Route('/album/{id}/new', name: 'app_review_new', methods: ['GET', 'POST'])]
     #[IsGranted('create_review', subject: 'album')]
-    public function new(Request $request, EntityManagerInterface $entityManager, Album $album): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, Album $album, AverageRatingService $averageRatingService): Response
     {
         $user = $this->getUser();
         $review = new Review();
@@ -32,9 +33,9 @@ final class ReviewController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($review);
-
-            $album->calculateAverageRating();
-            $entityManager->persist($album);
+            
+            $album->addReview($review); //so the average rating calc can pick the new review up
+            $averageRatingService->calculateAverageRating($album);
 
             $entityManager->flush();
 
@@ -51,7 +52,7 @@ final class ReviewController extends AbstractController
 
     #[Route('/review/{id}/edit', name: 'app_review_edit', methods: ['GET', 'POST'])]
     #[IsGranted('edit_review', subject: 'review')]
-    public function edit(Request $request, Review $review, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Review $review, EntityManagerInterface $entityManager, AverageRatingService $averageRatingService): Response
     {
         $form = $this->createForm(ReviewType::class, $review);
         $form->handleRequest($request);
@@ -61,8 +62,7 @@ final class ReviewController extends AbstractController
             $entityManager->persist($review);
 
             $album = $review->getAlbum();
-            $album->calculateAverageRating();
-            $entityManager->persist($album);
+            $averageRatingService->calculateAverageRating($album);
 
             $entityManager->flush();
 
@@ -78,23 +78,22 @@ final class ReviewController extends AbstractController
     }
     #[Route('/review/{id}/delete', name: 'app_review_delete', methods: ['POST'])]
     #[IsGranted('delete_review', subject: 'review')]
-    public function delete(Request $request, Review $review, EntityManagerInterface $entityManager, AlbumRepository $albumRepository): Response
+    public function delete(Request $request, Review $review, EntityManagerInterface $entityManager, AlbumRepository $albumRepository, AverageRatingService $averageRatingService): Response
     {
         if ($this->isCsrfTokenValid('delete'.$review->getId(), $request->getPayload()->getString('_token'))) {
             $album = $review->getAlbum();
             $albumId = $album->getId();
             
             $entityManager->remove($review);
+            $entityManager->flush(); //flush early so the average rating calc can see that the review is deleted
             
             $album = $albumRepository->find($albumId);
             
             if ($album) {
-                $album->calculateAverageRating();
-                $entityManager->persist($album);
-
+                $averageRatingService->calculateAverageRating($album);
+                $entityManager->flush(); 
             }
-            
-            $entityManager->flush(); 
+            $entityManager->flush(); //2nd flush so average rating for album is updated
             $this->addFlash('success', 'The review has been deleted.');
             return $this->redirectToRoute('app_album_show', ['id' => $albumId], Response::HTTP_SEE_OTHER);
         }
