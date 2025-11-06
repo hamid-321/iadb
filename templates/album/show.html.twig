@@ -15,6 +15,15 @@
             <div class="flex-1">
                 <div class="mb-2">
                     <span class="font-semibold text-black">{{ album.title }}</span>
+                    {% if album.coverName %}
+                        <div class="mb-4 aspect-square rounded-lg overflow-hidden bg-gray-100 max-w-32 mx-auto">
+                            <img src="{{ vich_uploader_asset(album, 'coverFile') }}" alt="{{ album.title }}" class="w-full h-full object-cover">
+                        </div>
+                    {% else %}
+                        <div class="mb-4 aspect-square rounded-lg overflow-hidden bg-gray-200 max-w-32 mx-auto flex items-center justify-center">
+                            <span class="text-4xl text-gray-400">{{ album.title|first|upper }}</span>
+                        </div>
+                    {% endif %}
                 </div>
                 <span class="text-sm text-gray-500 mb-2 block">by {{ album.artist }}</span>
                 <div class="flex items-center gap-2 mb-2">
@@ -37,11 +46,6 @@
             </div>
         </div>
         <div class="mt-3">
-            {% if album.cover %}
-                <div class="mb-4 max-w-xs">
-                    <img src="{{ album.cover }}" alt="{{ album.title }}" class="w-full rounded-lg object-cover">
-                </div>
-            {% endif %}
             <p class="text-gray-900 leading-relaxed mb-2">
                 <span class="font-medium text-gray-700">Genre:</span> {{ album.genre }}
             </p>

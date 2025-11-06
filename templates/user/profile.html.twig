@@ -12,9 +12,9 @@
     <div class="bg-white rounded-lg shadow-md p-6 mb-4 border border-gray-200 hover:shadow-lg transition-shadow">
         {# Profile Picture #}
         <div class="mb-6">
-            {% if user.profilePicture %}
+            {% if user.profilePictureName %}
                 <div class="w-32 h-32 rounded-lg overflow-hidden bg-gray-100">
-                    <img src="{{ user.profilePicture }}" alt="{{ user.email }}" class="w-full h-full object-cover">
+                    <img src="{{ vich_uploader_asset(user, 'profilePictureFile') }}" alt="{{ user.email }}" class="w-full h-full object-cover">
                 </div>
             {% else %}
                 <div class="mb-4 aspect-square rounded-lg overflow-hidden bg-gray-200 max-w-32 mx-auto flex items-center justify-center">

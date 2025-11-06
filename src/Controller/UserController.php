@@ -37,6 +37,9 @@ final class UserController extends AbstractController
             $passwordHasher->hashPasswordForUser($user, $plainPassword);
             
             $entityManager->flush();
+            // //serialisation issue, remove the file so it is not attempted to be serialised
+            // file has already been uploaded, fine to do this...
+            $user->setProfilePictureFile(null); 
             
             //solve issue when admin updates their own roles
             $currentUser = $this->getUser();

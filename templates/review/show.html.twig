@@ -14,7 +14,12 @@
                 <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
-                            <div class="mb-2">
+                            <div class="mb-2 flex items-center gap-2">
+                                {% if review.reviewer.profilePictureName %}
+                                    <div class="mb-4 aspect-square rounded-lg overflow-hidden bg-gray-100 max-w-10">
+                                        <img src="{{ vich_uploader_asset(review.reviewer, 'profilePictureFile') }}" alt="{{ review.reviewer.email }}" class="w-full h-full object-cover">
+                                    </div>
+                                {% endif %}
                                 <span class="font-semibold text-black">{{ review.reviewer.email }}</span>
                             </div>
                             {% if review.timestamp %}

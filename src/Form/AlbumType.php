@@ -6,6 +6,7 @@ use App\Entity\Album;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Vich\UploaderBundle\Form\Type\VichImageType;
 
 class AlbumType extends AbstractType
 {
@@ -16,7 +17,13 @@ class AlbumType extends AbstractType
             ->add('artist')
             ->add('genre')
             ->add('trackList')
-            ->add('cover')
+            ->add('coverFile', VichImageType::class, [
+                'required' => false,
+                'allow_delete' => true,
+                'delete_label' => 'Delete cover',
+                'download_uri' => false,
+                'image_uri' => false,
+            ]);
         ;
     }
 

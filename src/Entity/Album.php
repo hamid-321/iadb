@@ -2,13 +2,16 @@
 
 namespace App\Entity;
 
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use App\Repository\AlbumRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
 
 #[ORM\Entity(repositoryClass: AlbumRepository::class)]
+#[Vich\Uploadable]
 class Album
 {
     #[ORM\Id]
@@ -28,8 +31,17 @@ class Album
     #[ORM\Column(type: Types::TEXT)]
     private ?string $trackList = null;
 
+    #[Vich\UploadableField(mapping: 'albumCover', fileNameProperty: 'coverName', size: 'imageSize')]
+    private ?File $coverFile = null;
+
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $cover = null;
+    private ?string $coverName = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $imageSize = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column(nullable: true)]
     private ?float $averageRating = null;
@@ -101,16 +113,39 @@ class Album
         return $this;
     }
 
-    public function getCover(): ?string
+    public function getCoverFile(): ?File
     {
-        return $this->cover;
+        return $this->coverFile;
     }
 
-    public function setCover(?string $cover): static
+    public function setCoverFile(?File $coverFile = null): void
     {
-        $this->cover = $cover;
+        $this->coverFile = $coverFile;
 
-        return $this;
+        if (null !== $coverFile) {
+            // update a field for doctrine to know something has changed
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+    }
+
+    public function getCoverName(): ?string
+    {
+        return $this->coverName;
+    }
+
+    public function setCoverName(?string $coverName): void
+    {
+        $this->coverName = $coverName;
+    }
+    
+    public function getImageSize(): ?int
+    {
+        return $this->imageSize;
+    }
+
+    public function setImageSize(?int $imageSize): void
+    {
+        $this->imageSize = $imageSize;
     }
 
     public function getAverageRating(): ?float

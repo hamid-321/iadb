@@ -9,10 +9,14 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Serializer\Attribute\Ignore;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
+#[Vich\Uploadable]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -35,8 +39,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
+    #[Vich\UploadableField(mapping: 'profilePicture', fileNameProperty: 'profilePictureName', size: 'imageSize')]
+    #[Ignore]
+    private ?File $profilePictureFile = null;
+
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $profilePicture = null;
+    private ?string $profilePictureName = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $imageSize = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $updatedAt = null;
 
     /**
      * @var Collection<int, Album>
@@ -138,16 +152,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // @deprecated, to be removed when upgrading to Symfony 8
     }
 
-    public function getProfilePicture(): ?string
+    public function getProfilePictureFile(): ?File
     {
-        return $this->profilePicture;
+        return $this->profilePictureFile;
     }
 
-    public function setProfilePicture(?string $profilePicture): static
+    public function setProfilePictureFile(?File $profilePictureFile = null): void
     {
-        $this->profilePicture = $profilePicture;
+        $this->profilePictureFile = $profilePictureFile;
 
-        return $this;
+        if (null !== $profilePictureFile) {
+            // update a field for doctrine to know something has changed
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+    }
+
+    public function getProfilePictureName(): ?string
+    {
+        return $this->profilePictureName;
+    }
+
+    public function setProfilePictureName(?string $profilePictureName): void
+    {
+        $this->profilePictureName = $profilePictureName;
+    }
+    
+    public function getImageSize(): ?int
+    {
+        return $this->imageSize;
+    }
+
+    public function setImageSize(?int $imageSize): void
+    {
+        $this->imageSize = $imageSize;
     }
 
     /**

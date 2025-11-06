@@ -1,0 +1,21 @@
+vich_uploader:
+    db_driver: orm
+
+    mappings:
+        albumCover:
+            uri_prefix: /images/albumCovers
+            upload_destination: '%kernel.project_dir%/public/images/albumCovers'
+            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
+
+            inject_on_load: false
+            delete_on_update: true
+            delete_on_remove: true
+
+        profilePicture:
+            uri_prefix: /images/profilePictures
+            upload_destination: '%kernel.project_dir%/public/images/profilePictures'
+            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
+
+            inject_on_load: false
+            delete_on_update: true
+            delete_on_remove: true
