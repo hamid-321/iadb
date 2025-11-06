@@ -31,7 +31,8 @@ class ReviewType extends AbstractType
             ])
             ->add('reviewText', TextareaType::class, [
                 'label' => 'Your Review',
-            ]);
+            ])
+        ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void
