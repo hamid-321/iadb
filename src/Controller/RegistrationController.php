@@ -14,6 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class RegistrationController extends AbstractController
 {
+    //uses the password hasher service for hashing
     #[Route('/register', name: 'app_register')]
     public function register(Request $request, PasswordHasherService $passwordHasher, Security $security, EntityManagerInterface $entityManager): Response
     {

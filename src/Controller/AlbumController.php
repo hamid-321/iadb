@@ -14,6 +14,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class AlbumController extends AbstractController
 {
+    //no restrictions, anyone can view the albums
     #[Route('/album', name: 'app_album_index', methods: ['GET'])]
     public function index(AlbumRepository $albumRepository): Response
     {
@@ -22,6 +23,7 @@ final class AlbumController extends AbstractController
         ]);
     }
 
+    //uses voter to check that the user is allowed to make an album
     #[Route('/album/new', name: 'app_album_new', methods: ['GET', 'POST'])]
     #[IsGranted('create_album')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
@@ -32,7 +34,7 @@ final class AlbumController extends AbstractController
 
         $form = $this->createForm(AlbumType::class, $album);
         $form->handleRequest($request);
-
+        //if successful, create and redirect to the new album
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($album);
             $entityManager->flush();
@@ -47,6 +49,7 @@ final class AlbumController extends AbstractController
         ]);
     }
 
+    //once again, no restrictions, anyone can view an album
     #[Route('/album/{id}', name: 'app_album_show', methods: ['GET'])]
     public function show(Album $album, AlbumRepository $albumRepository): Response
     {
@@ -57,13 +60,14 @@ final class AlbumController extends AbstractController
         ]);
     }
 
+    //uses voter to only allow admins and the user who created the album to edit it
     #[Route('/album/{id}/edit', name: 'app_album_edit', methods: ['GET', 'POST'])]
     #[IsGranted('edit_album', subject: 'album')]
     public function edit(Request $request, Album $album, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(AlbumType::class, $album);
         $form->handleRequest($request);
-
+        //if successful, update the album and redirect to the album
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
@@ -77,6 +81,7 @@ final class AlbumController extends AbstractController
         ]);
     }
 
+    //uses voter to only allow admins to delete albums
     #[Route('/album/{id}/delete', name: 'app_album_delete', methods: ['POST'])]
     #[IsGranted('delete_album', subject: 'album')]
     public function delete(Request $request, Album $album, EntityManagerInterface $entityManager): Response
