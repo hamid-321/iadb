@@ -30,6 +30,46 @@ class AlbumRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function searchWithReviews(?string $searchString, ?float $minRating, ?float $maxRating): array
+    {
+        $queryBuilder = $this->createQueryBuilder('a')
+            ->leftJoin('a.reviews', 'r')
+            ->addSelect('r')
+            ->leftJoin('r.reviewer', 'u')
+            ->addSelect('u')
+            ->distinct(); //stop duplication
+
+        if ($searchString !== null && $searchString !== '') {
+            $queryBuilder->andWhere(
+                $queryBuilder->expr()->orX(
+                    $queryBuilder->expr()->like('LOWER(a.title)', ':searchString'),
+                    $queryBuilder->expr()->like('LOWER(a.artist)', ':searchString'),
+                    $queryBuilder->expr()->like('LOWER(a.genre)', ':searchString')
+                )
+            )
+            ->setParameter('searchString', '%'.mb_strtolower($searchString).'%');
+        }
+
+        if ($minRating !== null) {
+            $queryBuilder->andWhere('a.averageRating IS NOT NULL')
+            ->andWhere('a.averageRating >= :minRating')
+            ->setParameter('minRating', $minRating);
+        }
+
+        if ($maxRating !== null) {
+            $queryBuilder->andWhere('a.averageRating IS NOT NULL')
+            ->andWhere('a.averageRating <= :maxRating')
+            ->setParameter('maxRating', $maxRating);
+        }
+
+        return $queryBuilder
+            ->orderBy('r.timestamp', 'DESC')
+            ->addOrderBy('a.averageRating', 'DESC')
+            ->addOrderBy('a.title', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Album[] Returns an array of Album objects
     //     */

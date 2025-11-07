@@ -23,7 +23,28 @@ final class AlbumController extends AbstractController
         ]);
     }
 
-    //uses voter to check that the user is allowed to make an album
+    
+    #[Route('/album/search', name: 'app_album_search', methods: ['GET'])]
+    public function search(Request $request, AlbumRepository $albumRepository): Response
+    {
+        $term = $request->query->get('q', '');
+        $min  = $request->query->get('minRating');
+        $max  = $request->query->get('maxRating');
+
+        // Normalize empty strings to null; cast numerics
+        $minRating = ($min === null || $min === '') ? null : (float) $min;
+        $maxRating = ($max === null || $max === '') ? null : (float) $max;
+
+        $albums = $albumRepository->searchWithReviews($term, $minRating, $maxRating);
+
+        return $this->render('album/search.html.twig', [
+            'albums'    => $albums,
+            'q'         => $term,
+            'minRating' => $min,
+            'maxRating' => $max,
+        ]);
+    }
+    
     #[Route('/album/new', name: 'app_album_new', methods: ['GET', 'POST'])]
     #[IsGranted('create_album')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
@@ -95,4 +116,5 @@ final class AlbumController extends AbstractController
 
         return $this->redirectToRoute('app_album_index', [], Response::HTTP_SEE_OTHER);
     }
+
 }
