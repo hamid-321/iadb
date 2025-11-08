@@ -30,7 +30,7 @@ class AlbumRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    public function searchWithReviews(?string $searchString, ?float $minRating, ?float $maxRating): array
+    public function searchWithReviews(?string $albumString, ?string $artistString, ?string $genreString, ?float $minRating, ?float $maxRating): array
     {
         $queryBuilder = $this->createQueryBuilder('a')
             ->leftJoin('a.reviews', 'r')
@@ -39,15 +39,22 @@ class AlbumRepository extends ServiceEntityRepository
             ->addSelect('u')
             ->distinct(); //stop duplication
 
-        if ($searchString !== null && $searchString !== '') {
-            $queryBuilder->andWhere(
-                $queryBuilder->expr()->orX(
-                    $queryBuilder->expr()->like('LOWER(a.title)', ':searchString'),
-                    $queryBuilder->expr()->like('LOWER(a.artist)', ':searchString'),
-                    $queryBuilder->expr()->like('LOWER(a.genre)', ':searchString')
-                )
-            )
-            ->setParameter('searchString', '%'.mb_strtolower($searchString).'%');
+        if ($albumString !== null && $albumString !== '') {
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->like('LOWER(a.title)', ':albumString'))
+            ->setParameter('albumString', '%'.mb_strtolower($albumString).'%');
+        }
+
+        if ($artistString !== null && $artistString !== '') {
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->like('LOWER(a.artist)', ':artistString'))
+            ->setParameter('artistString', '%'.mb_strtolower($artistString).'%');
+        }
+
+        if ($genreString !== null && $genreString !== '') {
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->like('LOWER(a.genre)', ':genreString'))
+            ->setParameter('genreString', '%'.mb_strtolower($genreString).'%');
         }
 
         if ($minRating !== null) {
@@ -64,8 +71,6 @@ class AlbumRepository extends ServiceEntityRepository
 
         return $queryBuilder
             ->orderBy('r.timestamp', 'DESC')
-            ->addOrderBy('a.averageRating', 'DESC')
-            ->addOrderBy('a.title', 'ASC')
             ->getQuery()
             ->getResult();
     }

@@ -27,19 +27,23 @@ final class AlbumController extends AbstractController
     #[Route('/album/search', name: 'app_album_search', methods: ['GET'])]
     public function search(Request $request, AlbumRepository $albumRepository): Response
     {
-        $term = $request->query->get('q', '');
+        $albumString = $request->query->get('album', '');
+        $artistString = $request->query->get('artist', '');
+        $genreString = $request->query->get('genre', '');
         $min  = $request->query->get('minRating');
         $max  = $request->query->get('maxRating');
 
-        // Normalize empty strings to null; cast numerics
+        // if not a valid number, set to null
         $minRating = ($min === null || $min === '') ? null : (float) $min;
         $maxRating = ($max === null || $max === '') ? null : (float) $max;
 
-        $albums = $albumRepository->searchWithReviews($term, $minRating, $maxRating);
+        $albums = $albumRepository->searchWithReviews($albumString, $artistString, $genreString, $minRating, $maxRating);
 
         return $this->render('album/search.html.twig', [
             'albums'    => $albums,
-            'q'         => $term,
+            'album'     => $albumString,
+            'artist'    => $artistString,
+            'genre'     => $genreString,
             'minRating' => $min,
             'maxRating' => $max,
         ]);
