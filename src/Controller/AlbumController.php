@@ -5,27 +5,37 @@ namespace App\Controller;
 use App\Entity\Album;
 use App\Form\AlbumType;
 use App\Repository\AlbumRepository;
+use App\Repository\ReviewRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Knp\Component\Pager\PaginatorInterface;
 
 final class AlbumController extends AbstractController
 {
     //no restrictions, anyone can view the albums
     #[Route('/album', name: 'app_album_index', methods: ['GET'])]
-    public function index(AlbumRepository $albumRepository): Response
+    public function index(Request $request, AlbumRepository $albumRepository, PaginatorInterface $paginator): Response
     {
+        $query = $albumRepository->getPaginationQuery();
+
+        $pagination = $paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            9,
+            ['defaultSortFieldName' => 'lower_title', 'defaultSortDirection' => 'asc']
+        );
         return $this->render('album/index.html.twig', [
-            'albums' => $albumRepository->findAll(),
+            'albums' => $pagination,
         ]);
     }
 
     
     #[Route('/album/search', name: 'app_album_search', methods: ['GET'])]
-    public function search(Request $request, AlbumRepository $albumRepository): Response
+    public function search(Request $request, AlbumRepository $albumRepository, PaginatorInterface $paginator): Response
     {
         $albumString = $request->query->get('album', '');
         $artistString = $request->query->get('artist', '');
@@ -37,10 +47,17 @@ final class AlbumController extends AbstractController
         $minRating = ($min === null || $min === '') ? null : (float) $min;
         $maxRating = ($max === null || $max === '') ? null : (float) $max;
 
-        $albums = $albumRepository->searchWithReviews($albumString, $artistString, $genreString, $minRating, $maxRating);
+        $query = $albumRepository->getPaginationSearchQuery($albumString, $artistString, $genreString, $minRating, $maxRating);
+
+        $pagination = $paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            9,
+            ['defaultSortFieldName' => 'lower_title', 'defaultSortDirection' => 'asc']
+        );
 
         return $this->render('album/search.html.twig', [
-            'albums'    => $albums,
+            'albums'    => $pagination,
             'album'     => $albumString,
             'artist'    => $artistString,
             'genre'     => $genreString,
@@ -76,12 +93,19 @@ final class AlbumController extends AbstractController
 
     //once again, no restrictions, anyone can view an album
     #[Route('/album/{id}', name: 'app_album_show', methods: ['GET'])]
-    public function show(Album $album, AlbumRepository $albumRepository): Response
+    public function show(Request $request, Album $album, ReviewRepository $reviewRepository, PaginatorInterface $paginator): Response
     {
-        $album = $albumRepository->findOneWithReviews($album->getId());
+        $query = $reviewRepository->getPaginatedByAlbumQuery($album);
+
+        $pagination = $paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            10
+        );
 
         return $this->render('album/show.html.twig', [
             'album' => $album,
+            'reviews' => $pagination,
         ]);
     }
 

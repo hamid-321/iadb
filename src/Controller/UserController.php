@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Bundle\SecurityBundle\Security;
+use Knp\Component\Pager\PaginatorInterface;
 
 final class UserController extends AbstractController
 {
@@ -67,10 +68,19 @@ final class UserController extends AbstractController
     //admin routes only, uses voters again
     #[Route('/user/admin', name: 'app_user_index', methods: ['GET'])]
     #[IsGranted('user_admin')]
-    public function index(UserRepository $userRepository): Response
+    public function index(Request $request, UserRepository $userRepository, PaginatorInterface $paginator): Response
     {
+        $query = $userRepository->getPaginationQuery();
+
+        $pagination = $paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            9,
+            ['defaultSortFieldName' => 'u.email', 'defaultSortDirection' => 'asc']
+        );
+
         return $this->render('user/index.html.twig', [
-            'users' => $userRepository->findAll(),
+            'users' => $pagination,
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Album;
 use App\Entity\Review;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,6 +15,17 @@ class ReviewRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Review::class);
+    }
+
+    public function getPaginatedByAlbumQuery(Album $album): \Doctrine\ORM\Query
+    {
+        return $this->createQueryBuilder('r')
+            ->leftJoin('r.reviewer', 'u')
+            ->addSelect('u')
+            ->where('r.album = :album')
+            ->setParameter('album', $album)
+            ->orderBy('r.timestamp', 'DESC')
+            ->getQuery();
     }
 
     //    /**

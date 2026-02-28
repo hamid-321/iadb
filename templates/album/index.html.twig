@@ -79,6 +79,7 @@
                 </div>
             {% endfor %}
         </div>
+        {{ knp_pagination_render(albums, 'utils/pagination.html.twig') }}
     {% else %}
         <div class="text-center py-12 bg-white rounded-lg shadow-md border border-gray-200">
             <p class="text-xl text-gray-600 mb-4">No albums found.</p>

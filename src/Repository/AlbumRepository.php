@@ -16,27 +16,27 @@ class AlbumRepository extends ServiceEntityRepository
         parent::__construct($registry, Album::class);
     }
 
-    public function findOneWithReviews(int $id): ?Album
-    {
-        return $this->createQueryBuilder('a')
-            ->leftJoin('a.reviews', 'r')
-            ->addSelect('r')
-            ->leftJoin('r.reviewer', 'u')
-            ->addSelect('u')
-            ->where('a.id = :id')
-            ->setParameter('id', $id)
-            ->orderBy('r.timestamp', 'DESC')
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
-
-    public function searchWithReviews(?string $albumString, ?string $artistString, ?string $genreString, ?float $minRating, ?float $maxRating): array
+    public function getPaginationQuery(): \Doctrine\ORM\Query
     {
         $queryBuilder = $this->createQueryBuilder('a')
             ->leftJoin('a.reviews', 'r')
             ->addSelect('r')
             ->leftJoin('r.reviewer', 'u')
             ->addSelect('u')
+            ->addSelect('LOWER(a.title) AS HIDDEN lower_title')
+            ->distinct();
+
+        return $queryBuilder->getQuery();
+    }
+
+    public function getPaginationSearchQuery(?string $albumString, ?string $artistString, ?string $genreString, ?float $minRating, ?float $maxRating): \Doctrine\ORM\Query
+    {
+        $queryBuilder = $this->createQueryBuilder('a')
+            ->leftJoin('a.reviews', 'r')
+            ->addSelect('r')
+            ->leftJoin('r.reviewer', 'u')
+            ->addSelect('u')
+            ->addSelect('LOWER(a.title) AS HIDDEN lower_title')
             ->distinct(); //stop duplication
 
         if ($albumString !== null && $albumString !== '') {
@@ -69,11 +69,10 @@ class AlbumRepository extends ServiceEntityRepository
             ->setParameter('maxRating', $maxRating);
         }
 
-        return $queryBuilder
-            ->orderBy('r.timestamp', 'DESC')
-            ->getQuery()
-            ->getResult();
+        return $queryBuilder->getQuery();
     }
+
+
 
     //    /**
     //     * @return Album[] Returns an array of Album objects
