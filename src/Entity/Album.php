@@ -7,28 +7,35 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\HttpFoundation\File\File;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: AlbumRepository::class)]
 #[Vich\Uploadable]
+#[Serializer\ExclusionPolicy('all')]
 class Album
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Serializer\Expose]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Serializer\Expose]
     private ?string $title = null;
 
     #[ORM\Column(length: 100)]
+    #[Serializer\Expose]
     private ?string $artist = null;
 
     #[ORM\Column(length: 30)]
+    #[Serializer\Expose]
     private ?string $genre = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Serializer\Expose]
     private ?string $trackList = null;
 
     #[Vich\UploadableField(mapping: 'albumCover', fileNameProperty: 'coverName', size: 'imageSize')]
@@ -44,6 +51,7 @@ class Album
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column(nullable: true)]
+    #[Serializer\Expose]
     private ?float $averageRating = null;
 
     /**

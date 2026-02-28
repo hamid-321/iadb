@@ -72,6 +72,14 @@ class AlbumRepository extends ServiceEntityRepository
         return $queryBuilder->getQuery();
     }
 
+    public function getAPIPaginationQuery(): \Doctrine\ORM\Query
+    {
+        $queryBuilder = $this->createQueryBuilder('a')
+            ->addSelect('LOWER(a.title) AS HIDDEN lower_title');
+
+        return $queryBuilder->getQuery();
+    }
+
 
 
     //    /**
