@@ -4,12 +4,13 @@ fos_rest:
 #    allowed_methods_listener:  true
     routing_loader: false
 #    view:
-#        view_response_listener:  true
+        view_response_listener:  true
 #    exception:
 #        codes:
 #            App\Exception\MyException: 403
 #        messages:
 #            App\Exception\MyException: Forbidden area.
 #    format_listener:
-#        rules:
-#            - { path: ^/api, prefer_extension: true, fallback_format: json, priorities: [ json, html ] }
+        rules:
+            - { path: ^/api, prefer_extension: true, fallback_format: json, priorities: [ json ] }
+            - { path: ^/, stop: true}
