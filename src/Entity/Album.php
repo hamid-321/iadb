@@ -39,6 +39,7 @@ class Album
     private ?string $trackList = null;
 
     #[Vich\UploadableField(mapping: 'albumCover', fileNameProperty: 'coverName', size: 'imageSize')]
+    #[Serializer\Expose]
     private ?File $coverFile = null;
 
     #[ORM\Column(length: 255, nullable: true)]

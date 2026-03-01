@@ -17,10 +17,10 @@
                             <div class="mb-2 flex items-center gap-2">
                                 {% if review.reviewer.profilePictureName %}
                                     <div class="mb-4 aspect-square rounded-lg overflow-hidden bg-gray-100 max-w-10">
-                                        <img src="{{ vich_uploader_asset(review.reviewer, 'profilePictureFile') }}" alt="{{ review.reviewer.email }}" class="w-full h-full object-cover">
+                                        <img src="{{ vich_uploader_asset(review.reviewer, 'profilePictureFile') }}" alt="{{ review.reviewer.username }}" class="w-full h-full object-cover">
                                     </div>
                                 {% endif %}
-                                <span class="font-semibold text-black">{{ review.reviewer.email }}</span>
+                                <span class="font-semibold text-black">{{ review.reviewer.username }}</span>
                             </div>
                             {% if review.timestamp %}
                                 <span class="text-sm text-gray-500 mb-2 block">{{ review.timestamp|date('F j, Y') }}</span>

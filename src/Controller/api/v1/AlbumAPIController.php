@@ -3,6 +3,7 @@
 namespace App\Controller\api\v1;
 
 use App\Repository\AlbumRepository;
+use App\Repository\ReviewRepository;
 use FOS\RestBundle\Controller\AbstractFOSRestController as Rest;
 use FOS\RestBundle\View\View;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,7 +14,7 @@ use FOS\RestBundle\Controller\Annotations\Get;
 class AlbumAPIController extends Rest
 {
     #[Get('/api/v1/albums', name: 'api_albums_list')]
-    public function getAlbumsAction(AlbumRepository $albumRepository, PaginatorInterface $paginator, Request $request): View
+        public function getAlbumsList(AlbumRepository $albumRepository, PaginatorInterface $paginator, Request $request): View
     {
         //fetch query from repository
         $query = $albumRepository->getAPIPaginationQuery();
@@ -40,28 +41,32 @@ class AlbumAPIController extends Rest
         );
 
         //clean the track list and format as an array, also prepare data for response
-        $items = $pagination->getItems();
-        $formattedItems = [];
-        foreach ($items as $album) {
+        $albums = $pagination->getItems();
+        $formattedAlbumsData = [];
+        foreach ($albums as $album) {
+            //clean the track list
             $cleanTracks = $this->tidyTrackList($album->getTrackList());
 
-            $formattedItems[] = [
+            $formattedAlbumsData[] = [
                 'id' => $album->getId(),
                 'title' => $album->getTitle(),
                 'artist' => $album->getArtist(),
                 'tracks' => $cleanTracks,
-                'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : 0,
+                'cover_image' => $album->getCoverName() 
+                                 ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
+                                 : null,
+                'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,
             ];
         }
 
         //prepare data for response
         $responseData = [
-            'data' => $formattedItems,
+            'data' => $formattedAlbumsData,
             'meta' => [
                 'current_page' => $pagination->getCurrentPageNumber(),
                 'total_items' => $pagination->getTotalItemCount(),
                 'items_per_page' => $pagination->getItemNumberPerPage(),
-                'total_pages' => (int)ceil($pagination->getTotalItemCount() / $pagination->getItemNumberPerPage()),
+                'total_pages' => $pagination->getPageCount(),
             ]
         ];
         //create and return the view
@@ -71,11 +76,11 @@ class AlbumAPIController extends Rest
     }
 
 
-    #[Get('/api/v1/albums/{id}', name: 'api_album_detail')]
-    public function getAlbumDetailAction(int $id, AlbumRepository $albumRepository): View
+    #[Get('/api/v1/albums/{a_id}', name: 'api_album_detail')]
+    public function getAlbumsDetail(int $a_id, AlbumRepository $albumRepository, Request $request): View
     {
         //fetch the album from the repository
-        $album = $albumRepository->find($id);
+        $album = $albumRepository->find($a_id);
 
         //if the album is not found, return a 404 error
         if (!$album) 
@@ -91,7 +96,122 @@ class AlbumAPIController extends Rest
             'title' => $album->getTitle(),
             'artist' => $album->getArtist(),
             'tracks' => $cleanTracks,
-            'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : 0,
+            'cover_image' => $album->getCoverName() 
+                             ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
+                             : null,
+            'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,
+        ];
+
+        $view = View::create($responseData, Response::HTTP_OK);
+
+        return $view;
+    }
+
+    #[Get('/api/v1/albums/{a_id}/reviews', name: 'api_album_reviews_list')]
+    public function getAlbumsReviews(int $a_id, AlbumRepository $albumRepository, ReviewRepository $reviewRepository, PaginatorInterface $paginator, Request $request): View
+    {
+        $album = $albumRepository->find($a_id);
+
+        //if the album is not found, return a 404 error
+        if (!$album) 
+        {
+            $view = View::create(['error' => 'Album not found'], Response::HTTP_NOT_FOUND);
+            return $view;
+        }
+
+        //fetch the reviews for the album
+        $query = $reviewRepository->getPaginationByAlbumQuery($album);
+
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('pageSize', 10);
+
+        //add guardrails for page and limit
+        if ($page <= 0) {
+            $page = 1;
+        }
+        if ($limit <= 0 || $limit > 100) {
+            $limit = 10;
+        }
+
+        $pagination = $paginator->paginate(
+            $query,
+            $page,
+            $limit
+        );
+
+        $reviews = $pagination->getItems();
+
+        $albumData = [
+            'id' => $album->getId(),
+            'title' => $album->getTitle(),
+        ];
+
+        //prepare data for response
+        $formattedReviewsData = [];
+        foreach ($reviews as $review) {
+            $reviewer = $review->getReviewer();
+            $formattedReviewsData[] = [
+                'id' => $review->getId(),
+                'reviewer_username' => $reviewer->getUsername(),
+                'review_text' => $review->getReviewText(),
+                'rating' => $review->getRating(),
+                'timestamp' => $review->getTimestamp(),
+            ];
+        }
+
+        $responseData = [
+            'album' => $albumData,
+            'data' => $formattedReviewsData,
+            'meta' => [
+                'current_page' => $pagination->getCurrentPageNumber(),
+                'total_items' => $pagination->getTotalItemCount(),
+                'items_per_page' => $pagination->getItemNumberPerPage(),
+                'total_pages' => $pagination->getPageCount(),
+            ],
+        ];
+
+        $view = View::create($responseData, Response::HTTP_OK);
+
+        return $view;
+    }
+
+    #[Get('/api/v1/albums/{a_id}/reviews/{r_id}', name: 'api_album_review_detail')]
+    public function getAlbumsReviewsDetail(int $a_id, int $r_id, AlbumRepository $albumRepository, ReviewRepository $reviewRepository): View
+    {
+        $album = $albumRepository->find($a_id);
+
+        //if the album is not found, return a 404 error
+        if (!$album) 
+        {
+            $view = View::create(['error' => 'Album not found'], Response::HTTP_NOT_FOUND);
+            return $view;
+        }
+
+        $review = $reviewRepository->find($r_id);
+
+        //if the review is not found, return a 404 error
+        if (!$review) 
+        {
+            $view = View::create(['error' => 'Review not found'], Response::HTTP_NOT_FOUND);
+            return $view;
+        }
+
+        //if the review is not for this album, return a 404 error
+        if ($review->getAlbum() !== $album) 
+        {
+            $view = View::create(['error' => 'Review is not for this album'], Response::HTTP_NOT_FOUND);
+            return $view;
+        }
+
+        $reviewer = $review->getReviewer();
+
+        $responseData = [
+            'id' => $review->getId(),
+            'album_id' => $album->getId(),
+            'reviewer_username' => $reviewer->getUsername(),
+            'review_text' => $review->getReviewText(),
+            'rating' => $review->getRating(),
+            'timestamp' => $review->getTimestamp(),
         ];
 
         $view = View::create($responseData, Response::HTTP_OK);

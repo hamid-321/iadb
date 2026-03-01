@@ -7,7 +7,7 @@
     
     {# Welcome Message #}
     <h1 class="text-4xl font-bold tracking-tight text-indigo-600">
-        Hi {% if app.user %}{{ app.user.displayName | default(app.user.email) }}{% else %}Guest{% endif %},
+        Hi {% if app.user %}{{ app.user.displayName | default(app.user.username) }}{% else %}Guest{% endif %},
     </h1>
     <p class="mt-2 text-xl text-black">
         Welcome to AIDB, the best place for album reviews + info.

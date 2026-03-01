@@ -22,7 +22,7 @@ class PasswordHasherService
 
             $this->logger->info('Password hashed for user', [
                 'user_id' => $user->getId() ?? 'new_user', //new users dont have an id yet
-                'user_email' => $user->getEmail(),
+                'user_username' => $user->getUsername(),
             ]);
         }
     }

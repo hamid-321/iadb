@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ user.email }}{% endblock %}
+{% block title %}{{ user.username }}{% endblock %}
 
 {% block body %}
 <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
     <div class="mb-8">
-        <h1 class="text-4xl font-bold tracking-tight text-indigo-600 mb-2">{{ user.email }}</h1>
+        <h1 class="text-4xl font-bold tracking-tight text-indigo-600 mb-2">{{ user.username }}</h1>
         <p class="text-xl text-gray-600">User Profile</p>
     </div>
 
@@ -14,11 +14,11 @@
         <div class="mb-6">
             {% if user.profilePictureName %}
                 <div class="w-32 h-32 rounded-lg overflow-hidden bg-gray-100 mx-auto">
-                    <img src="{{ vich_uploader_asset(user, 'profilePictureFile') }}" alt="{{ user.email }}" class="w-full h-full object-cover">
+                    <img src="{{ vich_uploader_asset(user, 'profilePictureFile') }}" alt="{{ user.username }}" class="w-full h-full object-cover">
                 </div>
             {% else %}
                 <div class="mb-4 aspect-square rounded-lg overflow-hidden bg-gray-200 max-w-32 mx-auto flex items-center justify-center">
-                    <span class="text-4xl text-gray-400">{{ user.email|first|upper }}</span>
+                    <span class="text-4xl text-gray-400">{{ user.username|first|upper }}</span>
                 </div>
             {% endif %}
         </div>
@@ -26,7 +26,7 @@
         <div class="mb-6">
                 <div class="mb-4">
                     <p class="text-gray-900 leading-relaxed mb-2">
-                        <span class="font-medium text-gray-700">Email:</span> {{ user.email }}
+                        <span class="font-medium text-gray-700">Username:</span> {{ user.username }}
                     </p>
                     <p class="text-gray-900 leading-relaxed mb-2">
                         <span class="font-medium text-gray-700">User ID:</span> {{ user.id }}

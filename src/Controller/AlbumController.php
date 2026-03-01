@@ -95,7 +95,7 @@ final class AlbumController extends AbstractController
     #[Route('/album/{id}', name: 'app_album_show', methods: ['GET'])]
     public function show(Request $request, Album $album, ReviewRepository $reviewRepository, PaginatorInterface $paginator): Response
     {
-        $query = $reviewRepository->getPaginatedByAlbumQuery($album);
+        $query = $reviewRepository->getPaginationByAlbumQuery($album);
 
         $pagination = $paginator->paginate(
             $query,

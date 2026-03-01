@@ -76,7 +76,7 @@ final class UserController extends AbstractController
             $query,
             $request->query->getInt('page', 1),
             9,
-            ['defaultSortFieldName' => 'u.email', 'defaultSortDirection' => 'asc']
+            ['defaultSortFieldName' => 'u.username', 'defaultSortDirection' => 'asc']
         );
 
         return $this->render('user/index.html.twig', [

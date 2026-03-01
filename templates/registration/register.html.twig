@@ -12,16 +12,16 @@
 
                 {{ form_start(registrationForm, { attr: { class: 'space-y-5' } }) }}
                     <div>
-                        <label for="{{ registrationForm.email.vars.id }}" class="block mb-2 text-sm font-medium text-gray-900">Email</label>
-                        {{ form_widget(registrationForm.email, {
+                        <label for="{{ registrationForm.username.vars.id }}" class="block mb-2 text-sm font-medium text-gray-900">Username</label>
+                        {{ form_widget(registrationForm.username, {
                             attr: {
                                 class: 'block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500'
                             }
                         }) }}
                         {# if there are errors, show them #}
-                        {% if registrationForm.email.vars.errors|length > 0 %}
+                        {% if registrationForm.username.vars.errors|length > 0 %}
                             <div class="mt-4 mb-4 rounded border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm" role="alert">
-                                {% for error in registrationForm.email.vars.errors %}
+                                {% for error in registrationForm.username.vars.errors %}
                                     <span>{{ error.message }}</span><br>
                                 {% endfor %}
                             </div>

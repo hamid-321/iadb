@@ -5,30 +5,38 @@ namespace App\Entity;
 use App\Repository\ReviewRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
 
 #[ORM\Entity(repositoryClass: ReviewRepository::class)]
+#[Serializer\ExclusionPolicy('all')]
 class Review
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Serializer\Expose]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Serializer\Expose]
     private ?string $reviewText = null;
 
     #[ORM\Column]
+    #[Serializer\Expose]
     private ?int $rating = null;
 
     #[ORM\Column]
+    #[Serializer\Expose]
     private ?\DateTime $timestamp = null;
 
     #[ORM\ManyToOne(inversedBy: 'reviews')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Serializer\Expose]
     private ?Album $album = null;
 
     #[ORM\ManyToOne(inversedBy: 'reviews')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Serializer\Expose]
     private ?User $reviewer = null;
 
     public function getId(): ?int
