@@ -14,7 +14,7 @@ use FOS\RestBundle\Controller\Annotations\Get;
 class AlbumAPIController extends Rest
 {
     #[Get('/api/v1/albums', name: 'api_albums_list')]
-        public function getAlbumsList(AlbumRepository $albumRepository, PaginatorInterface $paginator, Request $request): View
+    public function getAlbumsList(AlbumRepository $albumRepository, PaginatorInterface $paginator, Request $request): View
     {
         //fetch query from repository
         $query = $albumRepository->getAPIPaginationQuery();
