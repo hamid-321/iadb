@@ -25,3 +25,7 @@ services:
     App\Service\PasswordHasherService:
         arguments:
             $logger: '@monolog.logger.service'
+
+    App\Controller\api\v1\APIUtilities:
+        arguments:
+            $urlGenerator: '@router'

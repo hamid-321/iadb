@@ -33,7 +33,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
-    public function getPaginationQuery(?string $sortBy = 'id', ?string $sortOrder = 'asc'): \Doctrine\ORM\Query
+    public function getPaginationQuery(?string $sortBy = 'id', ?string $sortDirection = 'asc'): \Doctrine\ORM\Query
     {
         $queryBuilder = $this->createQueryBuilder('u');
 
@@ -49,7 +49,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             $sort = 'u.id';
         }
 
-        $direction = (strtoupper(($sortOrder)) === 'ASC') ? 'ASC' : 'DESC';
+        $direction = (strtoupper(($sortDirection)) === 'ASC') ? 'ASC' : 'DESC';
 
         $queryBuilder->orderBy($sort, $direction);
 

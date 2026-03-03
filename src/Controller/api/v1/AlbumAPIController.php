@@ -10,11 +10,13 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Knp\Component\Pager\PaginatorInterface;
 use FOS\RestBundle\Controller\Annotations\Get;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use App\Controller\api\v1\APIUtilities;
 
 class AlbumAPIController extends Rest
 {
     #[Get('/api/v1/albums', name: 'api_albums_list')]
-    public function getAlbumsList(AlbumRepository $albumRepository, PaginatorInterface $paginator, Request $request): View
+    public function getAlbumsList(AlbumRepository $albumRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
     {
         $albumString = $request->query->get('album', '');
         $artistString = $request->query->get('artist', '');
@@ -22,7 +24,7 @@ class AlbumAPIController extends Rest
         $minRatingString = $request->query->get('minRating');
         $maxRatingString = $request->query->get('maxRating');
         $sortBy = $request->query->get('sortBy', 'id');
-        $sortOrder = $request->query->get('sortOrder', 'asc');
+        $sortDirection = $request->query->get('sortDirection', 'asc');
 
 
         $minRating = ($minRatingString !== null && $minRatingString !== '' && is_numeric($minRatingString)) ? (float) $minRatingString : null;
@@ -38,7 +40,7 @@ class AlbumAPIController extends Rest
         }
 
         //fetch query from repository
-        $query = $albumRepository->getAPIPaginationQuery($albumString, $artistString, $genreString, $minRating, $maxRating, $sortBy, $sortOrder);
+        $query = $albumRepository->getAPIPaginationQuery($albumString, $artistString, $genreString, $minRating, $maxRating, $sortBy, $sortDirection);
 
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('pageSize', 10);
@@ -78,18 +80,17 @@ class AlbumAPIController extends Rest
                                  ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
                                  : null,
                 'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,
+                'links' => [
+                    'self' => $this->generateUrl('api_album_detail', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                    'reviews' => $this->generateUrl('api_album_reviews_list', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                ],
             ];
         }
 
         //prepare data for response
         $responseData = [
             'data' => $formattedAlbumsData,
-            'meta' => [
-                'current_page' => $pagination->getCurrentPageNumber(),
-                'total_items' => $pagination->getTotalItemCount(),
-                'items_per_page' => $pagination->getItemNumberPerPage(),
-                'total_pages' => $pagination->getPageCount(),
-            ]
+            'meta' => $apiUtilities->getPaginationMeta($pagination, $request, 'api_albums_list')
         ];
         //create and return the view
         $view = View::create($responseData, Response::HTTP_OK);
@@ -123,6 +124,10 @@ class AlbumAPIController extends Rest
                              ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
                              : null,
             'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,
+            'links' => [
+                'self' => $this->generateUrl('api_album_detail', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                'reviews' => $this->generateUrl('api_album_reviews_list', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+            ],
         ];
 
         $view = View::create($responseData, Response::HTTP_OK);
@@ -131,7 +136,7 @@ class AlbumAPIController extends Rest
     }
 
     #[Get('/api/v1/albums/{a_id}/reviews', name: 'api_album_reviews_list')]
-    public function getAlbumsReviews(int $a_id, AlbumRepository $albumRepository, ReviewRepository $reviewRepository, PaginatorInterface $paginator, Request $request): View
+    public function getAlbumsReviews(int $a_id, AlbumRepository $albumRepository, ReviewRepository $reviewRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
     {
         $album = $albumRepository->find($a_id);
 
@@ -143,10 +148,10 @@ class AlbumAPIController extends Rest
         }
 
         $sortBy = $request->query->get('sortBy', 'timestamp');
-        $sortOrder = $request->query->get('sortOrder', 'desc');
+        $sortDirection = $request->query->get('sortDirection', 'desc');
 
         //fetch the reviews for the album
-        $query = $reviewRepository->getAPIPaginationByAlbumQuery($album, $sortBy, $sortOrder);
+        $query = $reviewRepository->getAPIPaginationByAlbumQuery($album, $sortBy, $sortDirection);
 
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('pageSize', 10);
@@ -179,6 +184,10 @@ class AlbumAPIController extends Rest
                              ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
                              : null,
             'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,
+            'links' => [
+                'self' => $this->generateUrl('api_album_detail', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                'reviews' => $this->generateUrl('api_album_reviews_list', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+            ],
         ];
 
         //prepare data for response
@@ -191,18 +200,16 @@ class AlbumAPIController extends Rest
                 'review_text' => $review->getReviewText(),
                 'rating' => $review->getRating(),
                 'timestamp' => $review->getTimestamp(),
+                'links' => [
+                    'self' => $this->generateUrl('api_album_review_detail', ['a_id' => $a_id, 'r_id' => $review->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                ],
             ];
         }
 
         $responseData = [
             'album' => $albumData,
             'data' => $formattedReviewsData,
-            'meta' => [
-                'current_page' => $pagination->getCurrentPageNumber(),
-                'total_items' => $pagination->getTotalItemCount(),
-                'items_per_page' => $pagination->getItemNumberPerPage(),
-                'total_pages' => $pagination->getPageCount(),
-            ],
+            'meta' => $apiUtilities->getPaginationMeta($pagination, $request, 'api_album_reviews_list', ['a_id' => $a_id])
         ];
 
         $view = View::create($responseData, Response::HTTP_OK);
@@ -247,6 +254,12 @@ class AlbumAPIController extends Rest
             'review_text' => $review->getReviewText(),
             'rating' => $review->getRating(),
             'timestamp' => $review->getTimestamp(),
+            'links' => [
+                'self' => $this->generateUrl('api_album_review_detail', ['a_id' => $a_id, 'r_id' => $review->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                'album' => $this->generateUrl('api_album_detail', ['a_id' => $a_id], UrlGeneratorInterface::ABSOLUTE_URL),
+                'reviews' => $this->generateUrl('api_album_reviews_list', ['a_id' => $a_id], UrlGeneratorInterface::ABSOLUTE_URL),
+                'reviewer' => $this->generateUrl('api_user_detail', ['u_id' => $reviewer->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+            ],
         ];
 
         $view = View::create($responseData, Response::HTTP_OK);

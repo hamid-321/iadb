@@ -10,17 +10,19 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Knp\Component\Pager\PaginatorInterface;
 use FOS\RestBundle\Controller\Annotations\Get;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use App\Controller\api\v1\APIUtilities;
 
 class ReviewAPIController extends Rest
 {
     #[Get('/api/v1/reviews', name: 'api_reviews_list')]
-    public function getReviewsList(ReviewRepository $reviewRepository, PaginatorInterface $paginator, Request $request): View
+    public function getReviewsList(ReviewRepository $reviewRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
     {
         $sortBy = $request->query->get('sortBy', 'timestamp');
-        $sortOrder = $request->query->get('sortOrder', 'desc');
+        $sortDirection = $request->query->get('sortDirection', 'desc');
 
         //fetch query from repository
-        $query = $reviewRepository->getAPIPaginationQuery($sortBy, $sortOrder);
+        $query = $reviewRepository->getAPIPaginationQuery($sortBy, $sortDirection);
 
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('pageSize', 10);
@@ -53,17 +55,17 @@ class ReviewAPIController extends Rest
                 'review_text' => $review->getReviewText(),
                 'rating' => $review->getRating(),
                 'timestamp' => $review->getTimestamp(),
+                'links' => [
+                    'self' => $this->generateUrl('api_review_detail', ['r_id' => $review->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                    'album' => $this->generateUrl('api_album_detail', ['a_id' => $review->getAlbum()->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                    'reviewer' => $this->generateUrl('api_user_detail', ['u_id' => $review->getReviewer()->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                ],
             ];
         }
 
         $responseData = [
             'data' => $formattedReviewsData,
-            'meta' => [
-                'current_page' => $pagination->getCurrentPageNumber(),
-                'total_items' => $pagination->getTotalItemCount(),
-                'items_per_page' => $pagination->getItemNumberPerPage(),
-                'total_pages' => $pagination->getPageCount(),
-            ]
+            'meta' => $apiUtilities->getPaginationMeta($pagination, $request, 'api_reviews_list')
         ];
         //create and return the view
         $view = View::create($responseData, Response::HTTP_OK);
@@ -89,6 +91,11 @@ class ReviewAPIController extends Rest
             'review_text' => $review->getReviewText(),
             'rating' => $review->getRating(),
             'timestamp' => $review->getTimestamp(),
+            'links' => [
+                'self' => $this->generateUrl('api_review_detail', ['r_id' => $review->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                'album' => $this->generateUrl('api_album_detail', ['a_id' => $review->getAlbum()->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                'reviewer' => $this->generateUrl('api_user_detail', ['u_id' => $review->getReviewer()->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+            ],
         ];
         //create and return the view
         $view = View::create($responseData, Response::HTTP_OK);

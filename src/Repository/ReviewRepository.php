@@ -29,7 +29,7 @@ class ReviewRepository extends ServiceEntityRepository
             ->getQuery();
     }
 
-    public function getAPIPaginationQuery(?string $sortBy = 'timestamp', ?string $sortOrder = 'desc'): \Doctrine\ORM\Query
+    public function getAPIPaginationQuery(?string $sortBy = 'timestamp', ?string $sortDirection = 'desc'): \Doctrine\ORM\Query
     {
         $queryBuilder = $this->createQueryBuilder('r')
         ->leftJoin('r.reviewer', 'u')
@@ -43,14 +43,14 @@ class ReviewRepository extends ServiceEntityRepository
             $sort = 'r.timestamp';
         }
 
-        $direction = (strtoupper(($sortOrder)) === 'ASC') ? 'ASC' : 'DESC';
+        $direction = (strtoupper(($sortDirection)) === 'ASC') ? 'ASC' : 'DESC';
 
         $queryBuilder->orderBy($sort, $direction);
 
         return $queryBuilder->getQuery();
     }
 
-    public function getAPIPaginationByAlbumQuery(Album $album, ?string $sortBy = 'timestamp', ?string $sortOrder = 'desc'): \Doctrine\ORM\Query
+    public function getAPIPaginationByAlbumQuery(Album $album, ?string $sortBy = 'timestamp', ?string $sortDirection = 'desc'): \Doctrine\ORM\Query
     {
         $queryBuilder = $this->createQueryBuilder('r')
         ->leftJoin('r.reviewer', 'u')
@@ -66,14 +66,14 @@ class ReviewRepository extends ServiceEntityRepository
             $sort = 'r.timestamp';
         }
 
-        $direction = (strtoupper(($sortOrder)) === 'ASC') ? 'ASC' : 'DESC';
+        $direction = (strtoupper(($sortDirection)) === 'ASC') ? 'ASC' : 'DESC';
 
         $queryBuilder->orderBy($sort, $direction);
 
         return $queryBuilder->getQuery();
     }
 
-    public function getAPIPaginationByUserQuery(User $user, ?string $sortBy = 'timestamp', ?string $sortOrder = 'desc'): \Doctrine\ORM\Query
+    public function getAPIPaginationByUserQuery(User $user, ?string $sortBy = 'timestamp', ?string $sortDirection = 'desc'): \Doctrine\ORM\Query
     {
         $queryBuilder = $this->createQueryBuilder('r')
         ->where('r.reviewer = :user')
@@ -87,7 +87,7 @@ class ReviewRepository extends ServiceEntityRepository
             $sort = 'r.timestamp';
         }
 
-        $direction = (strtoupper(($sortOrder)) === 'ASC') ? 'ASC' : 'DESC';
+        $direction = (strtoupper(($sortDirection)) === 'ASC') ? 'ASC' : 'DESC';
 
         $queryBuilder->orderBy($sort, $direction);
 

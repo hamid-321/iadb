@@ -72,7 +72,7 @@ class AlbumRepository extends ServiceEntityRepository
         return $queryBuilder->getQuery();
     }
 
-    public function getAPIPaginationQuery( ?string $albumString, ?string $artistString, ?string $genreString, ?float $minRating, ?float $maxRating, ?string $sortBy = 'id', ?string $sortOrder = 'asc'): \Doctrine\ORM\Query
+    public function getAPIPaginationQuery( ?string $albumString, ?string $artistString, ?string $genreString, ?float $minRating, ?float $maxRating, ?string $sortBy = 'id', ?string $sortDirection = 'asc'): \Doctrine\ORM\Query
     {
         $queryBuilder = $this->createQueryBuilder('a');
 
@@ -106,7 +106,7 @@ class AlbumRepository extends ServiceEntityRepository
             ->setParameter('maxRating', $maxRating);
         }
 
-        if ($sortBy !== null && $sortOrder !== null) {
+        if ($sortBy !== null && $sortDirection !== null) {
             $validStringSortFields = ['title', 'artist', 'genre'];
             $validNumericSortFields = ['id', 'averageRating'];
 
@@ -120,7 +120,7 @@ class AlbumRepository extends ServiceEntityRepository
                 $sort = 'a.id';
             }
 
-            $direction = (strtoupper($sortOrder) === 'DESC') ? 'DESC' : 'ASC';
+            $direction = (strtoupper($sortDirection) === 'DESC') ? 'DESC' : 'ASC';
 
             $queryBuilder->orderBy($sort, $direction);
         }
