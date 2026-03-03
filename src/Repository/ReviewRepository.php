@@ -29,13 +29,69 @@ class ReviewRepository extends ServiceEntityRepository
             ->getQuery();
     }
 
-    public function getPaginationByUserQuery(User $user): \Doctrine\ORM\Query
+    public function getAPIPaginationQuery(?string $sortBy = 'timestamp', ?string $sortOrder = 'desc'): \Doctrine\ORM\Query
     {
-        return $this->createQueryBuilder('r')
-            ->where('r.reviewer = :user')
-            ->setParameter('user', $user)
-            ->orderBy('r.timestamp', 'DESC')
-            ->getQuery();
+        $queryBuilder = $this->createQueryBuilder('r')
+        ->leftJoin('r.reviewer', 'u')
+        ->addSelect('u');
+
+        $validSortFields = ['timestamp', 'rating', 'id'];
+        if (in_array($sortBy, $validSortFields, true)) {
+            $sort = 'r.'.$sortBy;
+        } 
+        else {
+            $sort = 'r.timestamp';
+        }
+
+        $direction = (strtoupper(($sortOrder)) === 'ASC') ? 'ASC' : 'DESC';
+
+        $queryBuilder->orderBy($sort, $direction);
+
+        return $queryBuilder->getQuery();
+    }
+
+    public function getAPIPaginationByAlbumQuery(Album $album, ?string $sortBy = 'timestamp', ?string $sortOrder = 'desc'): \Doctrine\ORM\Query
+    {
+        $queryBuilder = $this->createQueryBuilder('r')
+        ->leftJoin('r.reviewer', 'u')
+        ->addSelect('u')
+        ->where('r.album = :album')
+        ->setParameter('album', $album);
+
+        $validSortFields = ['timestamp', 'rating', 'id'];
+        if (in_array($sortBy, $validSortFields, true)) {
+            $sort = 'r.'.$sortBy;
+        } 
+        else {
+            $sort = 'r.timestamp';
+        }
+
+        $direction = (strtoupper(($sortOrder)) === 'ASC') ? 'ASC' : 'DESC';
+
+        $queryBuilder->orderBy($sort, $direction);
+
+        return $queryBuilder->getQuery();
+    }
+
+    public function getAPIPaginationByUserQuery(User $user, ?string $sortBy = 'timestamp', ?string $sortOrder = 'desc'): \Doctrine\ORM\Query
+    {
+        $queryBuilder = $this->createQueryBuilder('r')
+        ->where('r.reviewer = :user')
+        ->setParameter('user', $user);
+
+        $validSortFields = ['timestamp', 'rating', 'id'];
+        if (in_array($sortBy, $validSortFields, true)) {
+            $sort = 'r.'.$sortBy;
+        }
+        else {
+            $sort = 'r.timestamp';
+        }
+
+        $direction = (strtoupper(($sortOrder)) === 'ASC') ? 'ASC' : 'DESC';
+
+        $queryBuilder->orderBy($sort, $direction);
+
+        return $queryBuilder->getQuery();
     }
 
     public function getPaginationQuery(): \Doctrine\ORM\Query

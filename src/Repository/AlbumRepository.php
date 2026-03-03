@@ -72,10 +72,58 @@ class AlbumRepository extends ServiceEntityRepository
         return $queryBuilder->getQuery();
     }
 
-    public function getAPIPaginationQuery(): \Doctrine\ORM\Query
+    public function getAPIPaginationQuery( ?string $albumString, ?string $artistString, ?string $genreString, ?float $minRating, ?float $maxRating, ?string $sortBy = 'id', ?string $sortOrder = 'asc'): \Doctrine\ORM\Query
     {
-        $queryBuilder = $this->createQueryBuilder('a')
-            ->addSelect('LOWER(a.title) AS HIDDEN lower_title');
+        $queryBuilder = $this->createQueryBuilder('a');
+
+        if ($albumString !== null && $albumString !== '') {
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->like('LOWER(a.title)', ':albumString'))
+            ->setParameter('albumString', '%'.mb_strtolower($albumString).'%');
+        }
+
+        if ($artistString !== null && $artistString !== '') {
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->like('LOWER(a.artist)', ':artistString'))
+            ->setParameter('artistString', '%'.mb_strtolower($artistString).'%');
+        }
+
+        if ($genreString !== null && $genreString !== '') {
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->like('LOWER(a.genre)', ':genreString'))
+            ->setParameter('genreString', '%'.mb_strtolower($genreString).'%');
+        }
+
+        if ($minRating !== null) {
+            $queryBuilder->andWhere('a.averageRating IS NOT NULL')
+            ->andWhere('a.averageRating >= :minRating')
+            ->setParameter('minRating', $minRating);
+        }
+
+        if ($maxRating !== null) {
+            $queryBuilder->andWhere('a.averageRating IS NOT NULL')
+            ->andWhere('a.averageRating <= :maxRating')
+            ->setParameter('maxRating', $maxRating);
+        }
+
+        if ($sortBy !== null && $sortOrder !== null) {
+            $validStringSortFields = ['title', 'artist', 'genre'];
+            $validNumericSortFields = ['id', 'averageRating'];
+
+            if (in_array($sortBy, $validStringSortFields, true)) {
+                $sort = 'LOWER(a.'.$sortBy.')';
+            } 
+            else if (in_array($sortBy, $validNumericSortFields, true)) {
+                $sort = 'a.'.$sortBy;
+            } 
+            else {
+                $sort = 'a.id';
+            }
+
+            $direction = (strtoupper($sortOrder) === 'DESC') ? 'DESC' : 'ASC';
+
+            $queryBuilder->orderBy($sort, $direction);
+        }
 
         return $queryBuilder->getQuery();
     }

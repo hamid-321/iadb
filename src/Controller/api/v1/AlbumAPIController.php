@@ -16,8 +16,25 @@ class AlbumAPIController extends Rest
     #[Get('/api/v1/albums', name: 'api_albums_list')]
     public function getAlbumsList(AlbumRepository $albumRepository, PaginatorInterface $paginator, Request $request): View
     {
+        $albumString = $request->query->get('album', '');
+        $artistString = $request->query->get('artist', '');
+        $genreString = $request->query->get('genre', '');
+        $minRating = $request->query->get('minRating');
+        $maxRating = $request->query->get('maxRating');
+        $sortBy = $request->query->get('sortBy', 'id');
+        $sortOrder = $request->query->get('sortOrder', 'asc');
+
+        if (!is_float($minRating)) {
+            $view = View::create(['error' => 'Min rating must be a number'], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+        if (!is_float($maxRating)) {
+            $view = View::create(['error' => 'Max rating must be a number'], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+
         //fetch query from repository
-        $query = $albumRepository->getAPIPaginationQuery();
+        $query = $albumRepository->getAPIPaginationQuery($albumString, $artistString, $genreString, $minRating, $maxRating, $sortBy, $sortOrder);
 
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('pageSize', 10);
@@ -51,6 +68,7 @@ class AlbumAPIController extends Rest
                 'id' => $album->getId(),
                 'title' => $album->getTitle(),
                 'artist' => $album->getArtist(),
+                'genre' => $album->getGenre(),
                 'tracks' => $cleanTracks,
                 'cover_image' => $album->getCoverName() 
                                  ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
@@ -95,6 +113,7 @@ class AlbumAPIController extends Rest
             'id' => $album->getId(),
             'title' => $album->getTitle(),
             'artist' => $album->getArtist(),
+            'genre' => $album->getGenre(),
             'tracks' => $cleanTracks,
             'cover_image' => $album->getCoverName() 
                              ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
@@ -119,8 +138,11 @@ class AlbumAPIController extends Rest
             return $view;
         }
 
+        $sortBy = $request->query->get('sortBy', 'timestamp');
+        $sortOrder = $request->query->get('sortOrder', 'desc');
+
         //fetch the reviews for the album
-        $query = $reviewRepository->getPaginationByAlbumQuery($album);
+        $query = $reviewRepository->getAPIPaginationByAlbumQuery($album, $sortBy, $sortOrder);
 
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('pageSize', 10);
@@ -141,9 +163,18 @@ class AlbumAPIController extends Rest
 
         $reviews = $pagination->getItems();
 
+        $cleanTracks = $this->tidyTrackList($album->getTrackList());
+
         $albumData = [
             'id' => $album->getId(),
             'title' => $album->getTitle(),
+            'artist' => $album->getArtist(),
+            'genre' => $album->getGenre(),
+            'tracks' => $cleanTracks,
+            'cover_image' => $album->getCoverName() 
+                             ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
+                             : null,
+            'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,
         ];
 
         //prepare data for response

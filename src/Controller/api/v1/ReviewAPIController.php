@@ -16,8 +16,11 @@ class ReviewAPIController extends Rest
     #[Get('/api/v1/reviews', name: 'api_reviews_list')]
     public function getReviewsList(ReviewRepository $reviewRepository, PaginatorInterface $paginator, Request $request): View
     {
+        $sortBy = $request->query->get('sortBy', 'timestamp');
+        $sortOrder = $request->query->get('sortOrder', 'desc');
+
         //fetch query from repository
-        $query = $reviewRepository->getPaginationQuery();
+        $query = $reviewRepository->getAPIPaginationQuery($sortBy, $sortOrder);
 
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('pageSize', 10);

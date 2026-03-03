@@ -98,7 +98,10 @@ class UserAPIController extends Rest
             return $view;
         }
 
-        $query = $reviewRepository->getPaginationByUserQuery($user);
+        $sortBy = $request->query->get('sortBy', 'timestamp');
+        $sortOrder = $request->query->get('sortOrder', 'desc');
+
+        $query = $reviewRepository->getAPIPaginationByUserQuery($user, $sortBy, $sortOrder);
 
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('pageSize', 10);
