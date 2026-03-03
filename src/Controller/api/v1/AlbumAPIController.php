@@ -19,16 +19,20 @@ class AlbumAPIController extends Rest
         $albumString = $request->query->get('album', '');
         $artistString = $request->query->get('artist', '');
         $genreString = $request->query->get('genre', '');
-        $minRating = $request->query->get('minRating');
-        $maxRating = $request->query->get('maxRating');
+        $minRatingString = $request->query->get('minRating');
+        $maxRatingString = $request->query->get('maxRating');
         $sortBy = $request->query->get('sortBy', 'id');
         $sortOrder = $request->query->get('sortOrder', 'asc');
 
-        if (!is_float($minRating)) {
+
+        $minRating = ($minRatingString !== null && $minRatingString !== '' && is_numeric($minRatingString)) ? (float) $minRatingString : null;
+        $maxRating = ($maxRatingString !== null && $maxRatingString !== '' && is_numeric($maxRatingString)) ? (float) $maxRatingString : null;
+
+        if ($minRatingString !== null && $minRatingString !== '' && !is_numeric($minRatingString)) {
             $view = View::create(['error' => 'Min rating must be a number'], Response::HTTP_BAD_REQUEST);
             return $view;
         }
-        if (!is_float($maxRating)) {
+        if ($maxRatingString !== null && $maxRatingString !== '' && !is_numeric($maxRatingString)) {
             $view = View::create(['error' => 'Max rating must be a number'], Response::HTTP_BAD_REQUEST);
             return $view;
         }

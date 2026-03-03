@@ -17,8 +17,11 @@ class UserAPIController extends Rest
     #[Get('/api/v1/users', name: 'api_users_list')]
     public function getUserList(UserRepository $userRepository, PaginatorInterface $paginator, Request $request): View
     {
+        $sortBy = $request->query->get('sortBy', 'id');
+        $sortOrder = $request->query->get('sortOrder', 'asc');
+
         //fetch query from repository
-        $query = $userRepository->getPaginationQuery();
+        $query = $userRepository->getPaginationQuery($sortBy, $sortOrder);
 
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('pageSize', 10);

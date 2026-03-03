@@ -33,9 +33,25 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
-    public function getPaginationQuery(): \Doctrine\ORM\Query
+    public function getPaginationQuery(?string $sortBy = 'id', ?string $sortOrder = 'asc'): \Doctrine\ORM\Query
     {
         $queryBuilder = $this->createQueryBuilder('u');
+
+        $validNumericSortFields = ['id'];
+        $validStringSortFields = ['username'];
+        if (in_array($sortBy, $validStringSortFields, true)) {
+            $sort = 'LOWER(u.'.$sortBy.')';
+        }
+        else if (in_array($sortBy, $validNumericSortFields, true)) {
+            $sort = 'u.'.$sortBy;
+        }
+        else {
+            $sort = 'u.id';
+        }
+
+        $direction = (strtoupper(($sortOrder)) === 'ASC') ? 'ASC' : 'DESC';
+
+        $queryBuilder->orderBy($sort, $direction);
 
         return $queryBuilder->getQuery();
     }
