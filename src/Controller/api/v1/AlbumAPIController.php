@@ -15,6 +15,13 @@ use App\Controller\api\v1\APIUtilities;
 
 class AlbumAPIController extends Rest
 {
+
+/*******************************************************************************
+ * 
+ * GET METHODS
+ * 
+ ******************************************************************************/
+
     #[Get('/api/v1/albums', name: 'api_albums_list')]
     public function getAlbumsList(AlbumRepository $albumRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
     {
