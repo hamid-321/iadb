@@ -234,6 +234,5 @@ class UserAPIController extends Rest
 
         $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => $errors], Response::HTTP_BAD_REQUEST);
         return $view;
-
     }
 }
