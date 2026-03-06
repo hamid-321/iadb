@@ -31,11 +31,11 @@ class AlbumAPIController extends Rest
         $maxRating = ($maxRatingString !== null && $maxRatingString !== '' && is_numeric($maxRatingString)) ? (float) $maxRatingString : null;
 
         if ($minRatingString !== null && $minRatingString !== '' && !is_numeric($minRatingString)) {
-            $view = View::create(['error' => 'Min rating must be a number'], Response::HTTP_BAD_REQUEST);
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => 'Min rating must be a number'], Response::HTTP_BAD_REQUEST);
             return $view;
         }
         if ($maxRatingString !== null && $maxRatingString !== '' && !is_numeric($maxRatingString)) {
-            $view = View::create(['error' => 'Max rating must be a number'], Response::HTTP_BAD_REQUEST);
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => 'Max rating must be a number'], Response::HTTP_BAD_REQUEST);
             return $view;
         }
 
@@ -108,7 +108,7 @@ class AlbumAPIController extends Rest
         //if the album is not found, return a 404 error
         if (!$album) 
         {
-            $view = View::create(['error' => 'Album not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Album not found'], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -143,7 +143,7 @@ class AlbumAPIController extends Rest
         //if the album is not found, return a 404 error
         if (!$album) 
         {
-            $view = View::create(['error' => 'Album not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Album not found'], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -225,7 +225,7 @@ class AlbumAPIController extends Rest
         //if the album is not found, return a 404 error
         if (!$album) 
         {
-            $view = View::create(['error' => 'Album not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Album not found'], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -234,14 +234,14 @@ class AlbumAPIController extends Rest
         //if the review is not found, return a 404 error
         if (!$review) 
         {
-            $view = View::create(['error' => 'Review not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Review not found'], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
         //if the review is not for this album, return a 404 error
         if ($review->getAlbum() !== $album) 
         {
-            $view = View::create(['error' => 'Review is not for this album'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Review is not for this album'], Response::HTTP_NOT_FOUND);
             return $view;
         }
 

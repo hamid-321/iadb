@@ -11,11 +11,23 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Knp\Component\Pager\PaginatorInterface;
 use FOS\RestBundle\Controller\Annotations\Get;
+use FOS\RestBundle\Controller\Annotations\Post;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use App\Controller\api\v1\APIUtilities;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
+use App\Service\PasswordHasherService;
+use App\Form\api\RegistrationFormAPIType;
 
 class UserAPIController extends Rest
 {
+
+/*******************************************************************************
+ * 
+ * GET METHODS
+ * 
+ ******************************************************************************/
 
     #[Get('/api/v1/users', name: 'api_users_list')]
     public function getUserList(UserRepository $userRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
@@ -78,7 +90,7 @@ class UserAPIController extends Rest
 
         if (!$user) 
         {
-            $view = View::create(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'User not found'], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -103,7 +115,7 @@ class UserAPIController extends Rest
 
         if (!$user) 
         {
-            $view = View::create(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'User not found'], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -166,5 +178,62 @@ class UserAPIController extends Rest
         $view = View::create($responseData, Response::HTTP_OK);
 
         return $view;
+    }
+
+/*******************************************************************************
+ * 
+ * POST METHODS
+ * 
+ ******************************************************************************/
+
+    #[Post('/api/v1/users', name: 'api_user_register')]
+    public function registerUser(Request $request, UserRepository $userRepository, EntityManagerInterface $entityManager, PasswordHasherService $passwordHasher, JWTTokenManagerInterface $jwtManager): View
+    {
+        //create the registration form and get the data from the json request
+        $user = new User();
+        $form = $this->createForm(RegistrationFormAPIType::class, $user);
+        $data = json_decode($request->getContent(), true);
+
+        $form->submit($data);
+
+        //if the form is valid, create the user and respond wiht the token
+        if ($form->isSubmitted() && $form->isValid()) {
+            $user->setRoles(['ROLE_USER']);
+        
+            $passwordHasher->hashPasswordForUser($user, $form->get('password')->getData());
+
+            $entityManager->persist($user);
+            $entityManager->flush();
+
+            $token = $jwtManager->create($user);
+
+            $responseData = [
+                'token' => $token,
+                'user' => [
+                    'username' => $user->getUsername(),
+                ],
+                'message' => 'User registered successfully',
+                'links' => [
+                    'self' => $this->generateUrl('api_user_detail', ['u_id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                ],
+            ];
+
+            $userUrl = $this->generateUrl('api_user_detail', ['u_id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+
+            $view = View::create($responseData, Response::HTTP_CREATED);
+            // add the location of the new user to the header
+            $view->setHeader('Location', $userUrl);
+            return $view;
+        }
+
+        //if the form is not valid, return the errors
+        $errors = [];
+        foreach ($form->getErrors(true) as $error) {
+            $errors[] = $error->getMessage();
+        }
+
+        $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => $errors], Response::HTTP_BAD_REQUEST);
+        return $view;
+
     }
 }

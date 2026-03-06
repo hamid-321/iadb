@@ -31,6 +31,7 @@ class AlbumAPIType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Album::class,
+            'csrf_protection' => false,
         ]);
     }
 }
