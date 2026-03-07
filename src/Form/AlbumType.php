@@ -7,6 +7,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Vich\UploaderBundle\Form\Type\VichImageType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 class AlbumType extends AbstractType
 {
@@ -23,6 +24,13 @@ class AlbumType extends AbstractType
                 'delete_label' => 'Delete cover',
                 'download_uri' => false,
                 'image_uri' => false,
+            ])
+            ->add('autofill', SubmitType::class, [
+                'label' => 'Autofill from MusicBrainz',
+                'attr' => [
+                    'formnovalidate' => 'formnovalidate',
+                ],
+                'validation_groups' => false,
             ]);
         ;
     }

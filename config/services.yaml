@@ -29,3 +29,9 @@ services:
     App\Controller\api\v1\APIUtilities:
         arguments:
             $urlGenerator: '@router'
+
+    GuzzleHttp\Client: ~
+
+    App\Service\MusicBrainzAPIService:
+        arguments:
+            $userAgent: 'internet_album_database/1.0 (h.chaudhry4@edu.salford.ac.uk)'

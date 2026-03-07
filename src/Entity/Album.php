@@ -79,9 +79,9 @@ class Album
         return $this->title;
     }
 
-    public function setTitle(string $title): static
+    public function setTitle(?string $title): static
     {
-        $this->title = $title;
+        $this->title = $title ?? '';
 
         return $this;
     }
@@ -91,9 +91,9 @@ class Album
         return $this->artist;
     }
 
-    public function setArtist(string $artist): static
+    public function setArtist(?string $artist): static
     {
-        $this->artist = $artist;
+        $this->artist = $artist ?? '';
 
         return $this;
     }
@@ -115,9 +115,9 @@ class Album
         return $this->trackList;
     }
 
-    public function setTrackList(string $trackList): static
+    public function setTrackList(?string $trackList): static
     {
-        $this->trackList = $trackList;
+        $this->trackList = $trackList ?? '';
 
         return $this;
     }

@@ -24,11 +24,18 @@
         {{ form_widget(form.coverFile, {'attr': {'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-100 dark:text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500'}}) }}
     </div>
 
+    <div>
+        {{ form_label(form.autofill, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}}) }}
+        {{ form_widget(form.autofill, {'attr': {'class': 'w-full sm:w-auto px-6 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors'}}) }}
+    </div>
+
     <div class="pt-4">
         <button type="submit" class="w-full sm:w-auto px-6 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
             {{ button_label|default('Create Album') }}
         </button>
     </div>
+
+
 
     {{ form_rest(form) }}
 {{ form_end(form) }}

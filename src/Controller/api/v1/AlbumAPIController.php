@@ -37,11 +37,14 @@ class AlbumAPIController extends Rest
         $minRating = ($minRatingString !== null && $minRatingString !== '' && is_numeric($minRatingString)) ? (float) $minRatingString : null;
         $maxRating = ($maxRatingString !== null && $maxRatingString !== '' && is_numeric($maxRatingString)) ? (float) $maxRatingString : null;
 
-        if ($minRatingString !== null && $minRatingString !== '' && !is_numeric($minRatingString)) {
+        if ($minRatingString !== null && $minRatingString !== '' && !is_numeric($minRatingString))
+        {
             $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => 'Min rating must be a number'], Response::HTTP_BAD_REQUEST);
             return $view;
         }
-        if ($maxRatingString !== null && $maxRatingString !== '' && !is_numeric($maxRatingString)) {
+
+        if ($maxRatingString !== null && $maxRatingString !== '' && !is_numeric($maxRatingString))
+        {
             $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => 'Max rating must be a number'], Response::HTTP_BAD_REQUEST);
             return $view;
         }
@@ -73,7 +76,8 @@ class AlbumAPIController extends Rest
         //clean the track list and format as an array, also prepare data for response
         $albums = $pagination->getItems();
         $formattedAlbumsData = [];
-        foreach ($albums as $album) {
+        foreach ($albums as $album)
+        {
             //clean the track list
             $cleanTracks = $this->tidyTrackList($album->getTrackList());
 
@@ -164,10 +168,12 @@ class AlbumAPIController extends Rest
         $limit = $request->query->getInt('pageSize', 10);
 
         //add guardrails for page and limit
-        if ($page <= 0) {
+        if ($page <= 0)
+        {
             $page = 1;
         }
-        if ($limit <= 0 || $limit > 100) {
+        if ($limit <= 0 || $limit > 100)
+        {
             $limit = 10;
         }
 
@@ -199,7 +205,8 @@ class AlbumAPIController extends Rest
 
         //prepare data for response
         $formattedReviewsData = [];
-        foreach ($reviews as $review) {
+        foreach ($reviews as $review)
+        {
             $reviewer = $review->getReviewer();
             $formattedReviewsData[] = [
                 'id' => $review->getId(),
@@ -277,7 +284,8 @@ class AlbumAPIController extends Rest
     //utility function to clean the track list and format as an array
     private function tidyTrackList(?string $rawTrackList): array
     {
-        if ($rawTrackList === null || $rawTrackList === '') {
+        if ($rawTrackList === null || $rawTrackList === '')
+        {
             return [];
         }
         $tracks = preg_split('/(\r\n|\n)/', $rawTrackList, -1, PREG_SPLIT_NO_EMPTY);

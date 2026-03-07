@@ -62,7 +62,8 @@ class UserAPIController extends Rest
         $users = $pagination->getItems();
 
         $formattedUsersData = [];
-        foreach ($users as $user) {
+        foreach ($users as $user) 
+        {
             $formattedUsersData[] = [
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
@@ -128,10 +129,12 @@ class UserAPIController extends Rest
         $limit = $request->query->getInt('pageSize', 10);
 
         //add guardrails for page and limit
-        if ($page <= 0) {
+        if ($page <= 0)
+        {
             $page = 1;
         }
-        if ($limit <= 0 || $limit > 100) {
+        if ($limit <= 0 || $limit > 100)
+        {
             $limit = 10;
         }
 
@@ -154,7 +157,8 @@ class UserAPIController extends Rest
 
         //prepare data for response
         $formattedReviewsData = [];
-        foreach ($reviews as $review) {
+        foreach ($reviews as $review)
+        {
             $formattedReviewsData[] = [
                 'id' => $review->getId(),
                 'album_id' => $review->getAlbum()->getId(),
@@ -197,7 +201,8 @@ class UserAPIController extends Rest
         $form->submit($data);
 
         //if the form is valid, create the user and respond wiht the token
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid())
+        {
             $user->setRoles(['ROLE_USER']);
         
             $passwordHasher->hashPasswordForUser($user, $form->get('password')->getData());
@@ -228,7 +233,8 @@ class UserAPIController extends Rest
 
         //if the form is not valid, return the errors
         $errors = [];
-        foreach ($form->getErrors(true) as $error) {
+        foreach ($form->getErrors(true) as $error)
+        {
             $errors[] = $error->getMessage();
         }
 

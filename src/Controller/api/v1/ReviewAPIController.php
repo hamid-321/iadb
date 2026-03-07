@@ -61,7 +61,8 @@ class ReviewAPIController extends Rest
 
         $reviews = $pagination->getItems();
         $formattedReviewsData = [];
-        foreach ($reviews as $review) {
+        foreach ($reviews as $review)
+        {
             $formattedReviewsData[] = [
                 'id' => $review->getId(),
                 'album_id' => $review->getAlbum()->getId(),
@@ -130,7 +131,8 @@ class ReviewAPIController extends Rest
         $user = $this->getUser();
 
         //if the user is not found, return an unauthorised response
-        if (!$user) {
+        if (!$user)
+        {
             $view = View::create(['code' => Response::HTTP_UNAUTHORIZED, 'errors' => 'Must be logged in to create a review'], Response::HTTP_UNAUTHORIZED);
             return $view;
         }
@@ -143,10 +145,12 @@ class ReviewAPIController extends Rest
         $form->submit($data);
 
         //if the form is valid, create the review and respond with the review id
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid())
+        {
             
             $album = $albumRepository->find($data['album_id']);
-            if (!$album) {
+            if (!$album)
+            {
                 $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Album does not exist'], Response::HTTP_NOT_FOUND);
                 return $view;
             }
@@ -180,7 +184,8 @@ class ReviewAPIController extends Rest
         //if the form is not valid, return the errors
 
         $errors = [];
-        foreach ($form->getErrors(true) as $error) {
+        foreach ($form->getErrors(true) as $error)
+        {
             $errors[] = $error->getMessage();
         }
 
@@ -201,18 +206,21 @@ class ReviewAPIController extends Rest
         $review = $reviewRepository->find($r_id);
 
         //if the user is not found, return an unauthorised response
-        if (!$user) {
+        if (!$user)
+        {
             $view = View::create(['code' => Response::HTTP_UNAUTHORIZED, 'errors' => 'Must be logged in to edit a review'], Response::HTTP_UNAUTHORIZED);
             return $view;
         }
 
         //if the review is not found, return a not found response
-        if (!$review) {
+        if (!$review)
+        {
             $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Review not found'], Response::HTTP_NOT_FOUND);
             return $view;
         }
         
-        if ($review->getReviewer() !== $user) {
+        if ($review->getReviewer() !== $user)
+        {
             $view = View::create(['code' => Response::HTTP_FORBIDDEN, 'errors' => 'Not authorised to edit this review'], Response::HTTP_FORBIDDEN);
             return $view;
         }
@@ -223,7 +231,8 @@ class ReviewAPIController extends Rest
 
         $form->submit($data);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid())
+        {
             $review->setTimestamp(new \DateTime());
 
             $entityManager->persist($review);
@@ -244,7 +253,8 @@ class ReviewAPIController extends Rest
         }
 
         $errors = [];
-        foreach ($form->getErrors(true) as $error) {
+        foreach ($form->getErrors(true) as $error)
+        {
             $errors[] = $error->getMessage();
         }
 
@@ -264,17 +274,20 @@ class ReviewAPIController extends Rest
         $user = $this->getUser();
         $review = $reviewRepository->find($r_id);
         
-        if (!$user) {
+        if (!$user)
+        {
             $view = View::create(['code' => Response::HTTP_UNAUTHORIZED, 'errors' => 'Must be logged in to delete a review'], Response::HTTP_UNAUTHORIZED);
             return $view;
         }
         
-        if (!$review) {
+        if (!$review)
+        {
             $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Review not found'], Response::HTTP_NOT_FOUND);
             return $view;
         }
         
-        if ($review->getReviewer() !== $user) {
+        if ($review->getReviewer() !== $user)
+        {
             $view = View::create(['code' => Response::HTTP_FORBIDDEN, 'errors' => 'Not authorised to delete this review'], Response::HTTP_FORBIDDEN);
             return $view;
         }

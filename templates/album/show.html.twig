@@ -50,9 +50,16 @@
                 <span class="font-medium text-gray-700">Genre:</span> {{ album.genre }}
             </p>
             {% if album.trackList %}
-                <p class="text-gray-900 leading-relaxed">
-                    <span class="font-medium text-gray-700">Track List:</span><br>{{ album.trackList }}
-                </p>
+                <div class="text-gray-900 leading-relaxed">
+                    <span class="font-medium text-gray-700">Track List:</span>
+                    <ol class="mt-2 list-decimal list-inside space-y-1 text-gray-900 max-h-48 overflow-y-auto">
+                        {% for track in album.trackList|replace({"\r\n": "\n", "\r": "\n"})|split("\n") %}
+                            {% if track|trim %}
+                                <li class="pl-1">{{ track|trim }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ol>
+                </div>
             {% endif %}
         </div>
         {% if is_granted('edit_album', album) %}
@@ -66,6 +73,13 @@
             </div>
         {% endif %}
     </div>
+    {% if musicBrainzData %}
+        <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 mb-8">
+            <h2 class="text-2xl font-bold tracking-tight text-indigo-600 mb-2">MusicBrainz Data</h2>
+            <p class="text-gray-900 leading-relaxed mb-2">Release Date: {{ musicBrainzData.releaseDate ?? 'N/A' }}</p>
+            <p class="text-gray-900 leading-relaxed mb-2">Label: {{ musicBrainzData.label ?? 'N/A' }}</p>
+        </div>
+    {% endif %}
     <a href="{{ path('app_album_index') }}" class="inline-block px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors mb-4">
         Back to Albums
     </a>

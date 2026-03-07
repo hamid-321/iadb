@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Knp\Component\Pager\PaginatorInterface;
+use App\Service\MusicBrainzAPIService;
 
 final class AlbumController extends AbstractController
 {
@@ -68,7 +69,7 @@ final class AlbumController extends AbstractController
     
     #[Route('/album/new', name: 'app_album_new', methods: ['GET', 'POST'])]
     #[IsGranted('create_album')]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, MusicBrainzAPIService $musicBrainzAPIService): Response
     {
         $user = $this->getUser();
         $album = new Album();
@@ -76,8 +77,33 @@ final class AlbumController extends AbstractController
 
         $form = $this->createForm(AlbumType::class, $album);
         $form->handleRequest($request);
+
+        if ($form->get('autofill')->isClicked())
+        {
+            $musicBrainzAutofillData = $musicBrainzAPIService->albumAutofillAction($album->getTitle(), $album->getArtist());
+
+            if ($musicBrainzAutofillData) 
+            {
+                $album->setTrackList($musicBrainzAutofillData['tracks']);
+                $album->setTitle($musicBrainzAutofillData['title']);
+                $album->setArtist($musicBrainzAutofillData['artist']);
+
+                $this->addFlash('success', 'Album autofill data has been added.');
+            }
+            else
+            {
+                $this->addFlash('error', 'No album autofill data found.');
+            }
+
+            //recreate the form with the new data
+            return $this->render('album/new.html.twig', [
+                'form' => $this->createForm(AlbumType::class, $album)->createView(),
+            ]);
+        }
+
         //if successful, create and redirect to the new album
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid())
+        {
             $entityManager->persist($album);
             $entityManager->flush();
 
@@ -93,9 +119,11 @@ final class AlbumController extends AbstractController
 
     //once again, no restrictions, anyone can view an album
     #[Route('/album/{id}', name: 'app_album_show', methods: ['GET'])]
-    public function show(Request $request, Album $album, ReviewRepository $reviewRepository, PaginatorInterface $paginator): Response
+    public function show(Request $request, Album $album, ReviewRepository $reviewRepository, PaginatorInterface $paginator, MusicBrainzAPIService $musicBrainzAPIService): Response
     {
         $query = $reviewRepository->getPaginationByAlbumQuery($album);
+
+        $musicBrainzData = $musicBrainzAPIService->albumAction($album->getTitle(), $album->getArtist());
 
         $pagination = $paginator->paginate(
             $query,
@@ -106,18 +134,47 @@ final class AlbumController extends AbstractController
         return $this->render('album/show.html.twig', [
             'album' => $album,
             'reviews' => $pagination,
+            'musicBrainzData' => $musicBrainzData,
         ]);
     }
 
     //uses voter to only allow admins and the user who created the album to edit it
     #[Route('/album/{id}/edit', name: 'app_album_edit', methods: ['GET', 'POST'])]
     #[IsGranted('edit_album', subject: 'album')]
-    public function edit(Request $request, Album $album, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Album $album, EntityManagerInterface $entityManager, MusicBrainzAPIService $musicBrainzAPIService): Response
     {
         $form = $this->createForm(AlbumType::class, $album);
         $form->handleRequest($request);
+
+        if ($form->get('autofill')->isClicked())
+        {
+            $artist = $album->getArtist();
+            $title = $album->getTitle();
+            $musicBrainzAutofillData = $musicBrainzAPIService->albumAutofillAction($title, $artist);
+
+            if ($musicBrainzAutofillData) 
+            {
+                $album->setTrackList($musicBrainzAutofillData['tracks']);
+                $album->setTitle($musicBrainzAutofillData['title']);
+                $album->setArtist($musicBrainzAutofillData['artist']);;
+
+                $this->addFlash('success', 'Album autofill data has been added.');
+            }
+            else
+            {
+                $this->addFlash('error', 'No album autofill data found.');
+            }
+
+            //recreate the form with the new data
+            return $this->render('album/edit.html.twig', [
+                'album' => $album,
+                'form' => $this->createForm(AlbumType::class, $album)->createView(),
+            ]);
+        }
+
         //if successful, update the album and redirect to the album
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid())
+        {
             $entityManager->flush();
 
             $this->addFlash('success', 'The album has been updated.');
@@ -135,7 +192,8 @@ final class AlbumController extends AbstractController
     #[IsGranted('delete_album', subject: 'album')]
     public function delete(Request $request, Album $album, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$album->getId(), $request->getPayload()->getString('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$album->getId(), $request->getPayload()->getString('_token')))
+        {
             $entityManager->remove($album);
             $entityManager->flush();
 
