@@ -2,6 +2,7 @@
 
 namespace App\Controller\api\v1;
 
+use App\Entity\Album;
 use App\Repository\AlbumRepository;
 use App\Repository\ReviewRepository;
 use FOS\RestBundle\Controller\AbstractFOSRestController as Rest;
@@ -39,13 +40,13 @@ class AlbumAPIController extends Rest
 
         if ($minRatingString !== null && $minRatingString !== '' && !is_numeric($minRatingString))
         {
-            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => 'Min rating must be a number'], Response::HTTP_BAD_REQUEST);
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Min rating must be a number']], Response::HTTP_BAD_REQUEST);
             return $view;
         }
 
         if ($maxRatingString !== null && $maxRatingString !== '' && !is_numeric($maxRatingString))
         {
-            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => 'Max rating must be a number'], Response::HTTP_BAD_REQUEST);
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Max rating must be a number']], Response::HTTP_BAD_REQUEST);
             return $view;
         }
 
@@ -73,29 +74,12 @@ class AlbumAPIController extends Rest
             $limit
         );
 
-        //clean the track list and format as an array, also prepare data for response
+        //clean track list and format as array
         $albums = $pagination->getItems();
         $formattedAlbumsData = [];
         foreach ($albums as $album)
         {
-            //clean the track list
-            $cleanTracks = $this->tidyTrackList($album->getTrackList());
-
-            $formattedAlbumsData[] = [
-                'id' => $album->getId(),
-                'title' => $album->getTitle(),
-                'artist' => $album->getArtist(),
-                'genre' => $album->getGenre(),
-                'tracks' => $cleanTracks,
-                'cover_image' => $album->getCoverName() 
-                                 ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
-                                 : null,
-                'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,
-                'links' => [
-                    'self' => $this->generateUrl('api_album_detail', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
-                    'reviews' => $this->generateUrl('api_album_reviews_list', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
-                ],
-            ];
+            $formattedAlbumsData[] = $this->formatAlbumData($album, $request);
         }
 
         //prepare data for response
@@ -119,27 +103,11 @@ class AlbumAPIController extends Rest
         //if the album is not found, return a 404 error
         if (!$album) 
         {
-            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Album not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['Album not found']], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
-        $cleanTracks = $this->tidyTrackList($album->getTrackList());
-
-        $responseData = [
-            'id' => $album->getId(),
-            'title' => $album->getTitle(),
-            'artist' => $album->getArtist(),
-            'genre' => $album->getGenre(),
-            'tracks' => $cleanTracks,
-            'cover_image' => $album->getCoverName() 
-                             ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
-                             : null,
-            'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,
-            'links' => [
-                'self' => $this->generateUrl('api_album_detail', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
-                'reviews' => $this->generateUrl('api_album_reviews_list', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
-            ],
-        ];
+        $responseData = $this->formatAlbumData($album, $request);
 
         $view = View::create($responseData, Response::HTTP_OK);
 
@@ -154,7 +122,7 @@ class AlbumAPIController extends Rest
         //if the album is not found, return a 404 error
         if (!$album) 
         {
-            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Album not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['Album not found']], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -184,24 +152,7 @@ class AlbumAPIController extends Rest
         );
 
         $reviews = $pagination->getItems();
-
-        $cleanTracks = $this->tidyTrackList($album->getTrackList());
-
-        $albumData = [
-            'id' => $album->getId(),
-            'title' => $album->getTitle(),
-            'artist' => $album->getArtist(),
-            'genre' => $album->getGenre(),
-            'tracks' => $cleanTracks,
-            'cover_image' => $album->getCoverName() 
-                             ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName() 
-                             : null,
-            'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,
-            'links' => [
-                'self' => $this->generateUrl('api_album_detail', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
-                'reviews' => $this->generateUrl('api_album_reviews_list', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
-            ],
-        ];
+        $albumData = $this->formatAlbumData($album, $request);
 
         //prepare data for response
         $formattedReviewsData = [];
@@ -239,7 +190,7 @@ class AlbumAPIController extends Rest
         //if the album is not found, return a 404 error
         if (!$album) 
         {
-            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Album not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['Album not found']], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -248,14 +199,14 @@ class AlbumAPIController extends Rest
         //if the review is not found, return a 404 error
         if (!$review) 
         {
-            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Review not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['Review not found']], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
         //if the review is not for this album, return a 404 error
         if ($review->getAlbum() !== $album) 
         {
-            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Review is not for this album'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['Review is not for this album']], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -279,6 +230,26 @@ class AlbumAPIController extends Rest
         $view = View::create($responseData, Response::HTTP_OK);
 
         return $view;
+    }
+
+    //helper function to format album data
+    private function formatAlbumData(Album $album, Request $request): array
+    {
+        return [
+            'id' => $album->getId(),
+            'title' => $album->getTitle(),
+            'artist' => $album->getArtist(),
+            'genre' => $album->getGenre(),
+            'tracks' => $this->tidyTrackList($album->getTrackList()),
+            'cover_image' => $album->getCoverName()
+                             ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName()
+                             : null,
+            'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,
+            'links' => [
+                'self' => $this->generateUrl('api_album_detail', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                'reviews' => $this->generateUrl('api_album_reviews_list', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+            ],
+        ];
     }
 
     //utility function to clean the track list and format as an array

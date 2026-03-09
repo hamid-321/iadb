@@ -2,7 +2,6 @@
 
 namespace App\Controller\api\v1;
 
-use App\Repository\AlbumRepository;
 use App\Repository\ReviewRepository;
 use App\Repository\UserRepository;
 use FOS\RestBundle\Controller\AbstractFOSRestController as Rest;
@@ -91,7 +90,7 @@ class UserAPIController extends Rest
 
         if (!$user) 
         {
-            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'User not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['User not found']], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -116,7 +115,7 @@ class UserAPIController extends Rest
 
         if (!$user) 
         {
-            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'User not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['User not found']], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -191,7 +190,7 @@ class UserAPIController extends Rest
  ******************************************************************************/
 
     #[Post('/api/v1/users', name: 'api_user_register')]
-    public function registerUser(Request $request, UserRepository $userRepository, EntityManagerInterface $entityManager, PasswordHasherService $passwordHasher, JWTTokenManagerInterface $jwtManager): View
+    public function registerUser(Request $request, EntityManagerInterface $entityManager, PasswordHasherService $passwordHasher, JWTTokenManagerInterface $jwtManager): View
     {
         //create the registration form and get the data from the json request
         $user = new User();

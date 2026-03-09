@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Knp\Component\Pager\PaginatorInterface;
 use App\Service\MusicBrainzAPIService;
-
+use App\Service\YoutubeAPIService;
 final class AlbumController extends AbstractController
 {
     //no restrictions, anyone can view the albums
@@ -119,11 +119,26 @@ final class AlbumController extends AbstractController
 
     //once again, no restrictions, anyone can view an album
     #[Route('/album/{id}', name: 'app_album_show', methods: ['GET'])]
-    public function show(Request $request, Album $album, ReviewRepository $reviewRepository, PaginatorInterface $paginator, MusicBrainzAPIService $musicBrainzAPIService): Response
+    public function show(Request $request, Album $album, ReviewRepository $reviewRepository, PaginatorInterface $paginator, MusicBrainzAPIService $musicBrainzAPIService, YoutubeAPIService $youtubeAPIService): Response
     {
         $query = $reviewRepository->getPaginationByAlbumQuery($album);
 
         $musicBrainzData = $musicBrainzAPIService->albumAction($album->getTitle(), $album->getArtist());
+
+        $youtubeVideoId = null;
+        if ($musicBrainzData)
+        {
+            //convert track list from string to array before passing to youtube api service
+            $trackTitles = [];
+            if ($album->getTrackList()) 
+            {
+                $trackTitles = array_values(array_filter(
+                    array_map('trim', preg_split('/\r\n|\n/', $album->getTrackList(), -1, PREG_SPLIT_NO_EMPTY))
+                ));
+            }
+
+            $youtubeVideoId = $youtubeAPIService->searchVideos($album->getTitle(), $album->getArtist(), $trackTitles);
+        }
 
         $pagination = $paginator->paginate(
             $query,
@@ -135,6 +150,7 @@ final class AlbumController extends AbstractController
             'album' => $album,
             'reviews' => $pagination,
             'musicBrainzData' => $musicBrainzData,
+            'youtubeVideoId' => $youtubeVideoId,
         ]);
     }
 

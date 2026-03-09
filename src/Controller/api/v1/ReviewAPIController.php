@@ -95,7 +95,7 @@ class ReviewAPIController extends Rest
 
         if (!$review) 
         {
-            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Review not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['Review not found']], Response::HTTP_NOT_FOUND);
             return $view;
         }
 
@@ -133,7 +133,7 @@ class ReviewAPIController extends Rest
         //if the user is not found, return an unauthorised response
         if (!$user)
         {
-            $view = View::create(['code' => Response::HTTP_UNAUTHORIZED, 'errors' => 'Must be logged in to create a review'], Response::HTTP_UNAUTHORIZED);
+            $view = View::create(['code' => Response::HTTP_UNAUTHORIZED, 'errors' => ['Must be logged in to create a review']], Response::HTTP_UNAUTHORIZED);
             return $view;
         }
 
@@ -151,7 +151,7 @@ class ReviewAPIController extends Rest
             $album = $albumRepository->find($data['album_id']);
             if (!$album)
             {
-                $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Album does not exist'], Response::HTTP_NOT_FOUND);
+                $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['Album does not exist']], Response::HTTP_NOT_FOUND);
                 return $view;
             }
             
@@ -166,15 +166,16 @@ class ReviewAPIController extends Rest
             $entityManager->persist($review);
             $entityManager->flush();
 
+            $reviewUrl = $this->generateUrl('api_review_detail', ['r_id' => $review->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+
             $responseData = [
                 'message' => 'Review created successfully',
                 'links' => [
-                    'self' => $this->generateUrl('api_review_detail', ['r_id' => $review->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                    'self' => $reviewUrl,
                     'album' => $this->generateUrl('api_album_detail', ['a_id' => $album->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
                 ],
             ];
 
-            $reviewUrl = $this->generateUrl('api_review_detail', ['r_id' => $review->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
             $view = View::create($responseData, Response::HTTP_CREATED);
             // add the location of the new review to the header
@@ -208,20 +209,20 @@ class ReviewAPIController extends Rest
         //if the user is not found, return an unauthorised response
         if (!$user)
         {
-            $view = View::create(['code' => Response::HTTP_UNAUTHORIZED, 'errors' => 'Must be logged in to edit a review'], Response::HTTP_UNAUTHORIZED);
+            $view = View::create(['code' => Response::HTTP_UNAUTHORIZED, 'errors' => ['Must be logged in to edit a review']], Response::HTTP_UNAUTHORIZED);
             return $view;
         }
 
         //if the review is not found, return a not found response
         if (!$review)
         {
-            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Review not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['Review not found']], Response::HTTP_NOT_FOUND);
             return $view;
         }
         
         if ($review->getReviewer() !== $user)
         {
-            $view = View::create(['code' => Response::HTTP_FORBIDDEN, 'errors' => 'Not authorised to edit this review'], Response::HTTP_FORBIDDEN);
+            $view = View::create(['code' => Response::HTTP_FORBIDDEN, 'errors' => ['Not authorised to edit this review']], Response::HTTP_FORBIDDEN);
             return $view;
         }
 
@@ -269,26 +270,26 @@ class ReviewAPIController extends Rest
  ******************************************************************************/
 
     #[Delete('/api/v1/reviews/{r_id}', name: 'api_review_delete')]
-    public function deleteReview(int $r_id, Request $request, ReviewRepository $reviewRepository, EntityManagerInterface $entityManager, AverageRatingService $averageRatingService): View
+    public function deleteReview(int $r_id, ReviewRepository $reviewRepository, EntityManagerInterface $entityManager, AverageRatingService $averageRatingService): View
     {
         $user = $this->getUser();
         $review = $reviewRepository->find($r_id);
         
         if (!$user)
         {
-            $view = View::create(['code' => Response::HTTP_UNAUTHORIZED, 'errors' => 'Must be logged in to delete a review'], Response::HTTP_UNAUTHORIZED);
+            $view = View::create(['code' => Response::HTTP_UNAUTHORIZED, 'errors' => ['Must be logged in to delete a review']], Response::HTTP_UNAUTHORIZED);
             return $view;
         }
         
         if (!$review)
         {
-            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => 'Review not found'], Response::HTTP_NOT_FOUND);
+            $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['Review not found']], Response::HTTP_NOT_FOUND);
             return $view;
         }
         
         if ($review->getReviewer() !== $user)
         {
-            $view = View::create(['code' => Response::HTTP_FORBIDDEN, 'errors' => 'Not authorised to delete this review'], Response::HTTP_FORBIDDEN);
+            $view = View::create(['code' => Response::HTTP_FORBIDDEN, 'errors' => ['Not authorised to delete this review']], Response::HTTP_FORBIDDEN);
             return $view;
         }
         

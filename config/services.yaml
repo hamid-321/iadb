@@ -35,3 +35,9 @@ services:
     App\Service\MusicBrainzAPIService:
         arguments:
             $userAgent: 'internet_album_database/1.0 (h.chaudhry4@edu.salford.ac.uk)'
+            $logger: '@monolog.logger.service'
+    
+    App\Service\YoutubeAPIService:
+        arguments:
+            $apiKey: '%env(YOUTUBE_API_KEY)%'
+            $logger: '@monolog.logger.service'
