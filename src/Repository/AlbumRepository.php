@@ -72,14 +72,14 @@ class AlbumRepository extends ServiceEntityRepository
         return $queryBuilder->getQuery();
     }
 
-    public function getAPIPaginationQuery( ?string $albumString, ?string $artistString, ?string $genreString, ?float $minRating, ?float $maxRating, ?string $sortBy = 'id', ?string $sortDirection = 'asc'): \Doctrine\ORM\Query
+    public function getAPIPaginationQuery( ?string $titleString, ?string $artistString, ?string $genreString, ?float $minRating, ?float $maxRating, ?string $sortBy = 'id', ?string $sortDirection = 'asc'): \Doctrine\ORM\Query
     {
         $queryBuilder = $this->createQueryBuilder('a');
 
-        if ($albumString !== null && $albumString !== '') {
+        if ($titleString !== null && $titleString !== '') {
             $queryBuilder
-                ->andWhere($queryBuilder->expr()->like('LOWER(a.title)', ':albumString'))
-            ->setParameter('albumString', '%'.mb_strtolower($albumString).'%');
+                ->andWhere($queryBuilder->expr()->like('LOWER(a.title)', ':titleString'))
+            ->setParameter('titleString', '%'.mb_strtolower($titleString).'%');
         }
 
         if ($artistString !== null && $artistString !== '') {

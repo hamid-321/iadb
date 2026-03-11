@@ -32,7 +32,7 @@ class ReviewAPIType extends AbstractType
                     ]),
                 ],
             ])
-            ->add('review_text', TextareaType::class);
+            ->add('reviewText', TextareaType::class);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

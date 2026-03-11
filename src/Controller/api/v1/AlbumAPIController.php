@@ -26,7 +26,7 @@ class AlbumAPIController extends Rest
     #[Get('/api/v1/albums', name: 'api_albums_list')]
     public function getAlbumsList(AlbumRepository $albumRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
     {
-        $albumString = $request->query->get('album', '');
+        $titleString = $request->query->get('title', '');
         $artistString = $request->query->get('artist', '');
         $genreString = $request->query->get('genre', '');
         $minRatingString = $request->query->get('minRating');
@@ -50,19 +50,43 @@ class AlbumAPIController extends Rest
             return $view;
         }
 
-        //fetch query from repository
-        $query = $albumRepository->getAPIPaginationQuery($albumString, $artistString, $genreString, $minRating, $maxRating, $sortBy, $sortDirection);
+        if ($minRating !== null && ($minRating < 0 || $minRating > 5))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Min rating must be between 0 and 5 inclusive']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
 
-        $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('pageSize', 10);
+        if ($maxRating !== null && ($maxRating < 0 || $maxRating > 5))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Max rating must be between 0 and 5 inclusive']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+
+        if ($minRating !== null && $maxRating !== null && $minRating > $maxRating)
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Min rating cannot be greater than max rating']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+
+        //fetch query from repository
+        $query = $albumRepository->getAPIPaginationQuery($titleString, $artistString, $genreString, $minRating, $maxRating, $sortBy, $sortDirection);
+
+        $page = $request->query->get('page', 1);
+        $limit = $request->query->get('pageSize', 10);
+
+        if ($page !== null && $limit !== null && (!is_numeric($page) || !is_numeric($limit)))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Page and page size must be numbers']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
 
         //add guardrails for page and limit
-        if ($page <= 0) 
+        if ($page !== null && $page <= 0) 
         {
             $page = 1;
         }
 
-        if ($limit <= 0 || $limit > 100) 
+        if ($limit !== null && ($limit <= 0 || $limit > 100)) 
         {
             $limit = 10;
         }
@@ -89,14 +113,20 @@ class AlbumAPIController extends Rest
         ];
         //create and return the view
         $view = View::create($responseData, Response::HTTP_OK);
+        $view->setHeader('Cache-Control', 'public, max-age=60');
 
         return $view;
     }
 
 
     #[Get('/api/v1/albums/{a_id}', name: 'api_album_detail')]
-    public function getAlbumsDetail(int $a_id, AlbumRepository $albumRepository, Request $request): View
+    public function getAlbumsDetail(string $a_id, AlbumRepository $albumRepository, Request $request): View
     {
+        if (!is_numeric($a_id))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Album ID must be a number']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
         //fetch the album from the repository
         $album = $albumRepository->find($a_id);
 
@@ -110,13 +140,19 @@ class AlbumAPIController extends Rest
         $responseData = $this->formatAlbumData($album, $request);
 
         $view = View::create($responseData, Response::HTTP_OK);
+        $view->setHeader('Cache-Control', 'public, max-age=60');
 
         return $view;
     }
 
     #[Get('/api/v1/albums/{a_id}/reviews', name: 'api_album_reviews_list')]
-    public function getAlbumsReviews(int $a_id, AlbumRepository $albumRepository, ReviewRepository $reviewRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
+    public function getAlbumsReviewsList(string $a_id, AlbumRepository $albumRepository, ReviewRepository $reviewRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
     {
+        if (!is_numeric($a_id))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Album ID must be a number']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
         $album = $albumRepository->find($a_id);
 
         //if the album is not found, return a 404 error
@@ -132,8 +168,14 @@ class AlbumAPIController extends Rest
         //fetch the reviews for the album
         $query = $reviewRepository->getAPIPaginationByAlbumQuery($album, $sortBy, $sortDirection);
 
-        $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('pageSize', 10);
+        $page = $request->query->get('page', 1);
+        $limit = $request->query->get('pageSize', 10);
+
+        if ($page !== null && $limit !== null && (!is_numeric($page) || !is_numeric($limit)))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Page and page size must be numbers']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
 
         //add guardrails for page and limit
         if ($page <= 0)
@@ -161,8 +203,8 @@ class AlbumAPIController extends Rest
             $reviewer = $review->getReviewer();
             $formattedReviewsData[] = [
                 'id' => $review->getId(),
-                'reviewer_username' => $reviewer->getUsername(),
-                'review_text' => $review->getReviewText(),
+                'reviewerUsername' => $reviewer->getUsername(),
+                'reviewText' => $review->getReviewText(),
                 'rating' => $review->getRating(),
                 'timestamp' => $review->getTimestamp(),
                 'links' => [
@@ -178,13 +220,20 @@ class AlbumAPIController extends Rest
         ];
 
         $view = View::create($responseData, Response::HTTP_OK);
+        $view->setHeader('Cache-Control', 'public, max-age=60');
 
         return $view;
     }
 
     #[Get('/api/v1/albums/{a_id}/reviews/{r_id}', name: 'api_album_review_detail')]
-    public function getAlbumsReviewsDetail(int $a_id, int $r_id, AlbumRepository $albumRepository, ReviewRepository $reviewRepository): View
+    public function getAlbumsReviewsDetail(string $a_id, string $r_id, AlbumRepository $albumRepository, ReviewRepository $reviewRepository): View
     {
+        if (!is_numeric($a_id) || !is_numeric($r_id))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Album ID and review ID must be numbers']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+
         $album = $albumRepository->find($a_id);
 
         //if the album is not found, return a 404 error
@@ -214,9 +263,9 @@ class AlbumAPIController extends Rest
 
         $responseData = [
             'id' => $review->getId(),
-            'album_id' => $album->getId(),
-            'reviewer_username' => $reviewer->getUsername(),
-            'review_text' => $review->getReviewText(),
+            'albumId' => $album->getId(),
+            'reviewerUsername' => $reviewer->getUsername(),
+            'reviewText' => $review->getReviewText(),
             'rating' => $review->getRating(),
             'timestamp' => $review->getTimestamp(),
             'links' => [
@@ -228,6 +277,7 @@ class AlbumAPIController extends Rest
         ];
 
         $view = View::create($responseData, Response::HTTP_OK);
+        $view->setHeader('Cache-Control', 'public, max-age=60');
 
         return $view;
     }
@@ -241,7 +291,7 @@ class AlbumAPIController extends Rest
             'artist' => $album->getArtist(),
             'genre' => $album->getGenre(),
             'tracks' => $this->tidyTrackList($album->getTrackList()),
-            'cover_image' => $album->getCoverName()
+            'coverImage' => $album->getCoverName()
                              ? $request->getSchemeAndHttpHost() . '/images/albumCovers/' . $album->getCoverName()
                              : null,
             'averageRating' => ($album->getAverageRating() !== null) ? round($album->getAverageRating(), 1) : null,

@@ -38,11 +38,17 @@ class ReviewAPIController extends Rest
         //fetch query from repository
         $query = $reviewRepository->getAPIPaginationQuery($sortBy, $sortDirection);
 
-        $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('pageSize', 10);
+        $page = $request->query->get('page', 1);
+        $limit = $request->query->get('pageSize', 10);
+
+        if ($page !== null && $limit !== null && (!is_numeric($page) || !is_numeric($limit)))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Page and page size must be numbers']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
 
         //add guardrails for page and limit
-        if ($page <= 0) 
+        if ($page !== null && $page <= 0) 
         {
             $page = 1;
         }
@@ -65,9 +71,9 @@ class ReviewAPIController extends Rest
         {
             $formattedReviewsData[] = [
                 'id' => $review->getId(),
-                'album_id' => $review->getAlbum()->getId(),
-                'reviewer_username' => $review->getReviewer()->getUsername(),
-                'review_text' => $review->getReviewText(),
+                'albumId' => $review->getAlbum()->getId(),
+                'reviewerUsername' => $review->getReviewer()->getUsername(),
+                'reviewText' => $review->getReviewText(),
                 'rating' => $review->getRating(),
                 'timestamp' => $review->getTimestamp(),
                 'links' => [
@@ -84,13 +90,20 @@ class ReviewAPIController extends Rest
         ];
         //create and return the view
         $view = View::create($responseData, Response::HTTP_OK);
+        $view->setHeader('Cache-Control', 'public, max-age=60');
 
         return $view;
     }
 
     #[Get('/api/v1/reviews/{r_id}', name: 'api_review_detail')]
-    public function getReviewDetail(int $r_id, ReviewRepository $reviewRepository): View
+    public function getReviewsDetail(string $r_id, ReviewRepository $reviewRepository): View
     {
+        if (!is_numeric($r_id))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Review ID must be a number']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+
         $review = $reviewRepository->find($r_id);
 
         if (!$review) 
@@ -101,9 +114,9 @@ class ReviewAPIController extends Rest
 
         $responseData = [
             'id' => $review->getId(),
-            'album_id' => $review->getAlbum()->getId(),
-            'reviewer_username' => $review->getReviewer()->getUsername(),
-            'review_text' => $review->getReviewText(),
+            'albumId' => $review->getAlbum()->getId(),
+            'reviewerUsername' => $review->getReviewer()->getUsername(),
+            'reviewText' => $review->getReviewText(),
             'rating' => $review->getRating(),
             'timestamp' => $review->getTimestamp(),
             'links' => [
@@ -114,6 +127,7 @@ class ReviewAPIController extends Rest
         ];
         //create and return the view
         $view = View::create($responseData, Response::HTTP_OK);
+        $view->setHeader('Cache-Control', 'public, max-age=60');
 
         return $view;
     }
@@ -148,7 +162,7 @@ class ReviewAPIController extends Rest
         if ($form->isSubmitted() && $form->isValid())
         {
             
-            $album = $albumRepository->find($data['album_id']);
+            $album = $albumRepository->find($data['albumId']);
             if (!$album)
             {
                 $view = View::create(['code' => Response::HTTP_NOT_FOUND, 'errors' => ['Album does not exist']], Response::HTTP_NOT_FOUND);
@@ -201,8 +215,14 @@ class ReviewAPIController extends Rest
  ******************************************************************************/
 
     #[Put('/api/v1/reviews/{r_id}', name: 'api_review_update')]
-    public function updateReview(int $r_id, Request $request, ReviewRepository $reviewRepository, EntityManagerInterface $entityManager, AverageRatingService $averageRatingService): View
+    public function updateReview(string $r_id, Request $request, ReviewRepository $reviewRepository, EntityManagerInterface $entityManager, AverageRatingService $averageRatingService): View
     {
+        if (!is_numeric($r_id))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Review ID must be a number']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+        
         $user = $this->getUser();
         $review = $reviewRepository->find($r_id);
 
@@ -270,8 +290,14 @@ class ReviewAPIController extends Rest
  ******************************************************************************/
 
     #[Delete('/api/v1/reviews/{r_id}', name: 'api_review_delete')]
-    public function deleteReview(int $r_id, ReviewRepository $reviewRepository, EntityManagerInterface $entityManager, AverageRatingService $averageRatingService): View
+    public function deleteReview(string $r_id, ReviewRepository $reviewRepository, EntityManagerInterface $entityManager, AverageRatingService $averageRatingService): View
     {
+        if (!is_numeric($r_id))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Review ID must be a number']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+        
         $user = $this->getUser();
         $review = $reviewRepository->find($r_id);
         

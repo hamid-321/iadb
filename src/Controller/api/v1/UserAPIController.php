@@ -29,7 +29,7 @@ class UserAPIController extends Rest
  ******************************************************************************/
 
     #[Get('/api/v1/users', name: 'api_users_list')]
-    public function getUserList(UserRepository $userRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
+    public function getUsersList(UserRepository $userRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
     {
         $sortBy = $request->query->get('sortBy', 'id');
         $sortDirection = $request->query->get('sortDirection', 'asc');
@@ -37,8 +37,14 @@ class UserAPIController extends Rest
         //fetch query from repository
         $query = $userRepository->getPaginationQuery($sortBy, $sortDirection);
 
-        $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('pageSize', 10);
+        $page = $request->query->get('page', 1);
+        $limit = $request->query->get('pageSize', 10);
+
+        if ($page !== null && $limit !== null && (!is_numeric($page) || !is_numeric($limit)))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Page and page size must be numbers']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
 
         //add guardrails for page and limit
         if ($page <= 0) 
@@ -79,13 +85,20 @@ class UserAPIController extends Rest
         ];
         //create and return the view
         $view = View::create($responseData, Response::HTTP_OK);
+        $view->setHeader('Cache-Control', 'public, max-age=60');
 
         return $view;
     }
 
     #[Get('/api/v1/users/{u_id}', name: 'api_user_detail')]
-    public function getUserDetail(int $u_id, UserRepository $userRepository): View
+    public function getUsersDetail(string $u_id, UserRepository $userRepository): View
     {
+        if (!is_numeric($u_id))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['User ID must be a number']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+        
         $user = $userRepository->find($u_id);
 
         if (!$user) 
@@ -104,13 +117,20 @@ class UserAPIController extends Rest
         ];
         //create and return the view
         $view = View::create($responseData, Response::HTTP_OK);
+        $view->setHeader('Cache-Control', 'public, max-age=60');
 
         return $view;
     }
 
     #[Get('/api/v1/users/{u_id}/reviews', name: 'api_user_reviews_list')]
-    public function getUserReviewsList(int $u_id, UserRepository $userRepository, ReviewRepository $reviewRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
+    public function getUsersReviewsList(string $u_id, UserRepository $userRepository, ReviewRepository $reviewRepository, PaginatorInterface $paginator, Request $request, APIUtilities $apiUtilities): View
     {
+        if (!is_numeric($u_id))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['User ID must be a number']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+        
         $user = $userRepository->find($u_id);
 
         if (!$user) 
@@ -124,8 +144,14 @@ class UserAPIController extends Rest
 
         $query = $reviewRepository->getAPIPaginationByUserQuery($user, $sortBy, $sortDirection);
 
-        $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('pageSize', 10);
+        $page = $request->query->get('page', 1);
+        $limit = $request->query->get('pageSize', 10);
+
+        if ($page !== null && $limit !== null && (!is_numeric($page) || !is_numeric($limit)))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Page and page size must be numbers']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
 
         //add guardrails for page and limit
         if ($page <= 0)
@@ -160,9 +186,9 @@ class UserAPIController extends Rest
         {
             $formattedReviewsData[] = [
                 'id' => $review->getId(),
-                'album_id' => $review->getAlbum()->getId(),
-                'album_title' => $review->getAlbum()->getTitle(),
-                'review_text' => $review->getReviewText(),
+                'albumId' => $review->getAlbum()->getId(),
+                'albumTitle' => $review->getAlbum()->getTitle(),
+                'reviewText' => $review->getReviewText(),
                 'rating' => $review->getRating(),
                 'timestamp' => $review->getTimestamp(),
                 'links' => [
@@ -179,6 +205,7 @@ class UserAPIController extends Rest
         ];
 
         $view = View::create($responseData, Response::HTTP_OK);
+        $view->setHeader('Cache-Control', 'public, max-age=60');
 
         return $view;
     }
@@ -213,9 +240,6 @@ class UserAPIController extends Rest
 
             $responseData = [
                 'token' => $token,
-                'user' => [
-                    'username' => $user->getUsername(),
-                ],
                 'message' => 'User registered successfully',
                 'links' => [
                     'self' => $this->generateUrl('api_user_detail', ['u_id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
