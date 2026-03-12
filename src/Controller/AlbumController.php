@@ -126,6 +126,8 @@ final class AlbumController extends AbstractController
         $musicBrainzData = $musicBrainzAPIService->albumAction($album->getTitle(), $album->getArtist());
 
         $youtubeVideoId = null;
+        //only search for a video if we have musicbrainz data, this means the album is real and not any words
+        //this prevents dodgy videos from being searched for and displayed
         if ($musicBrainzData)
         {
             //convert track list from string to array before passing to youtube api service

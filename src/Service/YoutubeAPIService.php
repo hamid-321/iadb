@@ -21,7 +21,7 @@ class YoutubeAPIService
         try
         {
             //if we have a tracklist, get up to that number of results
-            $maxResults = count($trackTitles) > 0 ? count($trackTitles) : 1;
+            $maxResults = count($trackTitles) > 0 ? 10 : 1;
 
             $response = $this->client->request('GET', 'search', [
                 'query' => [
