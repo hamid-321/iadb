@@ -75,29 +75,91 @@ final class AlbumController extends AbstractController
         $album = new Album();
         $album->setAddedBy($user);
 
-        $form = $this->createForm(AlbumType::class, $album);
+        //get the session and the current autofill choices
+        $session = $request->getSession();
+        $mbidChoices = $session->get('album_autofill_choices', []);
+
+        //create form with autofill choices
+        //will display the autofill selector if mbid_choices is not empty
+        $form = $this->createForm(AlbumType::class, $album, ['mbid_choices' => $mbidChoices]);
         $form->handleRequest($request);
 
         if ($form->get('autofill')->isClicked())
         {
-            $musicBrainzAutofillData = $musicBrainzAPIService->albumAutofillAction($album->getTitle(), $album->getArtist());
+            //find the results from the query from the mb api
+            $searchResults = $musicBrainzAPIService->albumSearchAction($album->getTitle(), $album->getArtist());
 
-            if ($musicBrainzAutofillData) 
+            if ($searchResults !== null && $searchResults !== [])
             {
-                $album->setTrackList($musicBrainzAutofillData['tracks']);
-                $album->setTitle($musicBrainzAutofillData['title']);
-                $album->setArtist($musicBrainzAutofillData['artist']);
-
-                $this->addFlash('success', 'Album autofill data has been added.');
+                //if we have results, add them to the choices array,
+                //format then as title, artist and date so they can be distinguished easily
+                $mbidChoices = [];
+                foreach ($searchResults as $autofillChoice)
+                {
+                    $label = $autofillChoice['title'] . ' – ' . $autofillChoice['artist'];
+                    if ($autofillChoice['date'] !== null && $autofillChoice['date'] !== '')
+                    {
+                        $label .= ' (' . $autofillChoice['date'] . ')';
+                    }
+                    $mbidChoices[$label] = $autofillChoice['mbid'];
+                }
+                //save the choices to the session
+                $session->set('album_autofill_choices', $mbidChoices);
+                $this->addFlash('success', count($mbidChoices) . ' album(s) found. Select one and click "Use selected album".');
             }
             else
             {
-                $this->addFlash('error', 'No album autofill data found.');
+                //remove all choices and empty the array if no results and error message
+                $session->remove('album_autofill_choices');
+                $mbidChoices = [];
+                $this->addFlash('error', 'No albums found. Check the title and artist.');
             }
 
-            //recreate the form with the new data
+            $form = $this->createForm(AlbumType::class, $album, ['mbid_choices' => $mbidChoices]);
+
             return $this->render('album/new.html.twig', [
-                'form' => $this->createForm(AlbumType::class, $album)->createView(),
+                'album' => $album,
+                'form' => $form->createView(),
+                'musicBrainzSearchResults' => $searchResults ?? [],
+            ]);
+        }
+
+        if ($form->get('useSelected')->isClicked())
+        {
+            //get the chosen mbid, remove autofill choices
+            $selectedMbid = $form->get('selectedMbid')->getData();
+            $session->remove('album_autofill_choices');
+
+            if ($selectedMbid !== null && $selectedMbid !== '')
+            {
+                //get the autofill data from the mb api
+                $autofillData = $musicBrainzAPIService->albumAutofillByMbid($selectedMbid);
+                //if we have data, set the album data
+                if ($autofillData !== null)
+                {
+                    $album->setTrackList($autofillData['tracks']);
+                    $album->setTitle($autofillData['title']);
+                    $album->setArtist($autofillData['artist']);
+                    if (isset($autofillData['genre']) && $autofillData['genre'] !== '')
+                    {
+                        $album->setGenre($autofillData['genre']);
+                    }
+                    $this->addFlash('success', 'Album data has been filled. You can edit or submit.');
+                }
+                else
+                {
+                    $this->addFlash('error', 'Could not load album data.');
+                }
+            }
+            else
+            {
+                $this->addFlash('error', 'Please select an album from the list.');
+            }
+
+            return $this->render('album/new.html.twig', [
+                'album' => $album,
+                'form' => $this->createForm(AlbumType::class, $album, ['mbid_choices' => []])->createView(),
+                'musicBrainzSearchResults' => [],
             ]);
         }
 
@@ -113,7 +175,8 @@ final class AlbumController extends AbstractController
 
         return $this->render('album/new.html.twig', [
             'album' => $album,
-            'form' => $form,
+            'form' => $form->createView(),
+            'musicBrainzSearchResults' => [],
         ]);
     }
 
@@ -161,32 +224,79 @@ final class AlbumController extends AbstractController
     #[IsGranted('edit_album', subject: 'album')]
     public function edit(Request $request, Album $album, EntityManagerInterface $entityManager, MusicBrainzAPIService $musicBrainzAPIService): Response
     {
-        $form = $this->createForm(AlbumType::class, $album);
+        $session = $request->getSession();
+        $mbidChoices = $session->get('album_autofill_choices', []);
+
+        $form = $this->createForm(AlbumType::class, $album, ['mbid_choices' => $mbidChoices]);
         $form->handleRequest($request);
 
         if ($form->get('autofill')->isClicked())
         {
-            $artist = $album->getArtist();
-            $title = $album->getTitle();
-            $musicBrainzAutofillData = $musicBrainzAPIService->albumAutofillAction($title, $artist);
+            $searchResults = $musicBrainzAPIService->albumSearchAction($album->getTitle(), $album->getArtist());
 
-            if ($musicBrainzAutofillData) 
+            if ($searchResults !== null && $searchResults !== [])
             {
-                $album->setTrackList($musicBrainzAutofillData['tracks']);
-                $album->setTitle($musicBrainzAutofillData['title']);
-                $album->setArtist($musicBrainzAutofillData['artist']);;
-
-                $this->addFlash('success', 'Album autofill data has been added.');
+                $mbidChoices = [];
+                foreach ($searchResults as $a)
+                {
+                    $label = $a['title'] . ' – ' . $a['artist'];
+                    if ($a['date'] !== null && $a['date'] !== '')
+                    {
+                        $label .= ' (' . $a['date'] . ')';
+                    }
+                    $mbidChoices[$label] = $a['mbid'];
+                }
+                $session->set('album_autofill_choices', $mbidChoices);
+                $this->addFlash('success', count($mbidChoices) . ' album(s) found. Select one and click "Use selected album".');
             }
             else
             {
-                $this->addFlash('error', 'No album autofill data found.');
+                $session->remove('album_autofill_choices');
+                $mbidChoices = [];
+                $this->addFlash('error', 'No albums found. Check the title and artist.');
             }
 
-            //recreate the form with the new data
+            $form = $this->createForm(AlbumType::class, $album, ['mbid_choices' => $mbidChoices]);
+
             return $this->render('album/edit.html.twig', [
                 'album' => $album,
-                'form' => $this->createForm(AlbumType::class, $album)->createView(),
+                'form' => $form->createView(),
+                'musicBrainzSearchResults' => $searchResults ?? [],
+            ]);
+        }
+
+        if ($form->get('useSelected')->isClicked())
+        {
+            $selectedMbid = $form->get('selectedMbid')->getData();
+            $session->remove('album_autofill_choices');
+            if ($selectedMbid !== null && $selectedMbid !== '')
+            {
+                $autofillData = $musicBrainzAPIService->albumAutofillByMbid($selectedMbid);
+                if ($autofillData !== null)
+                {
+                    $album->setTrackList($autofillData['tracks']);
+                    $album->setTitle($autofillData['title']);
+                    $album->setArtist($autofillData['artist']);
+                    if (isset($autofillData['genre']) && $autofillData['genre'] !== '')
+                    {
+                        $album->setGenre($autofillData['genre']);
+                    }
+                    $this->addFlash('success', 'Album data has been filled. You can edit and save.');
+                }
+                else
+                {
+                    $this->addFlash('error', 'Could not load album data.');
+                }
+            }
+            else
+            {
+                $this->addFlash('error', 'Please select an album from the list.');
+            }
+
+            return $this->render('album/edit.html.twig', [
+                'album' => $album,
+                'form' => $this->createForm(AlbumType::class, $album, ['mbid_choices' => []])->createView(),
+                'musicBrainzSearchResults' => [],
             ]);
         }
 
@@ -201,7 +311,8 @@ final class AlbumController extends AbstractController
 
         return $this->render('album/edit.html.twig', [
             'album' => $album,
-            'form' => $form,
+            'form' => $form->createView(),
+            'musicBrainzSearchResults' => [],
         ]);
     }
 

@@ -79,36 +79,88 @@ class MusicBrainzAPIService
         }
     }
 
-    public function albumAutofillAction(?string $albumName, ?string $artistName): ?array
+    public function albumSearchAction(?string $albumName, ?string $artistName): ?array
     {
+        if ($albumName === null || $albumName === '' || $artistName === null || $artistName === '')
+        {
+            return null;
+        }
+
         try
         {
-            //request 1: lookup the album by name and artist to get the MBID
-            //using lucene query style as per musicbrainz docs
+            //find the top 10 results
+            $query = sprintf('artist:"%s" AND release:"%s"', $artistName, $albumName);
             $searchResponse = $this->client->request('GET', 'release', [
                 'query' => [
-                    'query' => sprintf('artist:"%s" AND release:"%s"', $artistName, $albumName),
-                    'fmt' => 'json'
+                    'query' => $query,
+                    'fmt' => 'json',
+                    'limit' => 10,
                 ]
             ]);
 
             $searchData = json_decode($searchResponse->getBody()->getContents(), true);
 
-            if (empty($searchData['releases'])) 
+            $this->logger->info('MusicBrainz API album search: {query}: {count} results', [
+                'query' => $query,
+                'count' => isset($searchData['releases']) ? count($searchData['releases']) : 0,
+            ]);
+
+            if (empty($searchData['releases']))
             {
                 return null;
             }
 
-            $mbid = $searchData['releases'][0]['id'];
+            //get the title, artist and release date to show on the drop down
+            $results = [];
+            foreach ($searchData['releases'] as $release) {
+                $artistNameFromRelease = $release['artist-credit'][0]['name'] ?? 'Unknown';
+                $results[] = [
+                    'mbid' => $release['id'],
+                    'title' => $release['title'] ?? 'Unknown',
+                    'artist' => $artistNameFromRelease,
+                    'date' => $release['date'] ?? null,
+                ];
+            }
 
-            $lookupResponse = $this->client->request('GET', "release/$mbid", [
+            return $results;
+        } 
+        catch (\Exception $e)
+        {
+            $this->logger->error('MusicBrainz API search error: {error}', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    public function albumAutofillByMbid(string $mbid): ?array
+    {
+        try {
+            $lookupResponse = $this->client->request('GET', "release/{$mbid}", [
                 'query' => [
-                    'inc' => 'recordings+labels+artist-credits',
+                    'inc' => 'recordings+labels+artist-credits+genres',
                     'fmt' => 'json'
                 ]
             ]);
-
             $data = json_decode($lookupResponse->getBody()->getContents(), true);
+
+            $genre = '';
+
+            $genres = $data['artist-credit'][0]['artist']['genres'] ?? [];
+
+            if (!empty($genres))
+            {
+                //sort by the most occuring genre
+                usort($genres, function ($a, $b)
+                {
+                    return $b['count'] <=> $a['count'];
+                });
+
+                $genre = $genres[0]['name'];
+
+                $genre = ucfirst(mb_strtolower($genre));
+            }
 
             $tracks = [];
             foreach ($data['media'][0]['tracks'] ?? [] as $track) 
@@ -116,22 +168,19 @@ class MusicBrainzAPIService
                 $tracks[] = $track['title'];
             }
 
-            $this->logger->info('MusicBrainz API response for album autofill action: {query}: {response}', [
-                'query' => $mbid,
-                'response' => $data,
-            ]);
+            $this->logger->info('MusicBrainz API autofill by MBID: {mbid}', ['mbid' => $mbid]);
 
             return [
                 'mbid' => $mbid,
-                'title' => $data['title'],
-                'artist' => $data['artist-credit'][0]['name'],
+                'title' => $data['title'] ?? 'Unknown',
+                'artist' => $data['artist-credit'][0]['name'] ?? 'Unknown',
                 'tracks' => implode("\n", $tracks),
+                'genre' => $genre,
             ];
-            
         }
-        catch (\Exception $e) 
+        catch (\Exception $e)
         {
-            $this->logger->error('MusicBrainz API Autofill error: {error}', [
+            $this->logger->error('MusicBrainz API Autofill by MBID error: {error}', [
                 'error' => $e->getMessage(),
             ]);
             return null;

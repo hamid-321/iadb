@@ -6,8 +6,9 @@ use App\Entity\Album;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Vich\UploaderBundle\Form\Type\VichImageType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Vich\UploaderBundle\Form\Type\VichImageType;
 
 class AlbumType extends AbstractType
 {
@@ -16,6 +17,19 @@ class AlbumType extends AbstractType
         $builder
             ->add('title')
             ->add('artist')
+            ->add('selectedMbid', ChoiceType::class, [
+                'choices' => $options['mbid_choices'],
+                'required' => false,
+                'label' => 'Select album',
+                'mapped' => false,
+            ])
+            ->add('useSelected', SubmitType::class, [
+                'label' => 'Use selected album',
+                'attr' => [
+                    'formnovalidate' => 'formnovalidate',
+                ],
+                'validation_groups' => false,
+            ])
             ->add('genre')
             ->add('trackList')
             ->add('coverFile', VichImageType::class, [
@@ -26,12 +40,12 @@ class AlbumType extends AbstractType
                 'image_uri' => false,
             ])
             ->add('autofill', SubmitType::class, [
-                'label' => 'Autofill from MusicBrainz',
+                'label' => 'Search MusicBrainz',
                 'attr' => [
                     'formnovalidate' => 'formnovalidate',
                 ],
                 'validation_groups' => false,
-            ]);
+            ])
         ;
     }
 
@@ -39,6 +53,9 @@ class AlbumType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Album::class,
+            'mbid_choices' => [],
         ]);
+
+        $resolver->setAllowedTypes('mbid_choices', 'array');
     }
 }
