@@ -224,6 +224,13 @@ class UserAPIController extends Rest
         $form = $this->createForm(RegistrationFormAPIType::class, $user);
         $data = json_decode($request->getContent(), true);
 
+        //if the request is invalid, $data will be null, so return a bad request
+        if ($data === null)
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Invalid JSON in request body']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+
         $form->submit($data);
 
         //if the form is valid, create the user and respond wiht the token

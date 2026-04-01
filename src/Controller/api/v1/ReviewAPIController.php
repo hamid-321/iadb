@@ -156,6 +156,19 @@ class ReviewAPIController extends Rest
         $form = $this->createForm(ReviewAPIType::class, $review);
         $data = json_decode($request->getContent(), true);
 
+        //if the request is invalid, $data will be null, so return a bad request
+        if ($data === null)
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Invalid JSON in request body']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+
+        if (!isset($data['rating']) || !is_numeric($data['rating']))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Rating must be a number']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+
         $form->submit($data);
 
         //if the form is valid, create the review and respond with the review id
@@ -249,6 +262,19 @@ class ReviewAPIController extends Rest
         //create the review form and get the data from the json request
         $form = $this->createForm(ReviewAPIType::class, $review);
         $data = json_decode($request->getContent(), true);
+
+        //if the request is invalid, $data will be null, so return a bad request
+        if ($data === null)
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Invalid JSON in request body']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
+
+        if (!isset($data['rating']) || !is_numeric($data['rating']))
+        {
+            $view = View::create(['code' => Response::HTTP_BAD_REQUEST, 'errors' => ['Rating must be a number']], Response::HTTP_BAD_REQUEST);
+            return $view;
+        }
 
         $form->submit($data);
 
